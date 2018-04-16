@@ -241,12 +241,9 @@ def resnet_v2_50(inputs, # 图像尺寸缩小了32倍
       # (256, 64, 3)代表构建的bottleneck残差学习单元（每个残差学习单元包含三个卷积层）中，第三层输出通道数
       # depth为256，前两层输出通道数depth_bottleneck为64，且中间那层步长3。这个残差学习单元结构为：
       # [(1*1/s1,64),(3*3/s2,64),(1*1/s1,256)]
-      Block(
-          'block2', bottleneck, [(512, 128, 1)] * 3 + [(512, 128, 2)]),
-      Block(
-          'block3', bottleneck, [(1024, 256, 1)] * 5 + [(1024, 256, 2)]),
-      Block(
-          'block4', bottleneck, [(2048, 512, 1)] * 3)]
+      Block('block2', bottleneck, [(512, 128, 1)] * 3 + [(512, 128, 2)]),
+      Block('block3', bottleneck, [(1024, 256, 1)] * 5 + [(1024, 256, 2)]),
+      Block('block4', bottleneck, [(2048, 512, 1)] * 3)]
   return resnet_v2(inputs, blocks, num_classes, global_pool,
                    include_root_block=True, reuse=reuse, scope=scope)
 
@@ -258,14 +255,10 @@ def resnet_v2_101(inputs, # unit提升的主要场所是block3
                   scope='resnet_v2_101'):
   """ResNet-101 model of [1]. See resnet_v2() for arg and return description."""
   blocks = [
-      Block(
-          'block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
-      Block(
-          'block2', bottleneck, [(512, 128, 1)] * 3 + [(512, 128, 2)]),
-      Block(
-          'block3', bottleneck, [(1024, 256, 1)] * 22 + [(1024, 256, 2)]),
-      Block(
-          'block4', bottleneck, [(2048, 512, 1)] * 3)]
+      Block('block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
+      Block('block2', bottleneck, [(512, 128, 1)] * 3 + [(512, 128, 2)]),
+      Block('block3', bottleneck, [(1024, 256, 1)] * 22 + [(1024, 256, 2)]),
+      Block('block4', bottleneck, [(2048, 512, 1)] * 3)]
   return resnet_v2(inputs, blocks, num_classes, global_pool,
                    include_root_block=True, reuse=reuse, scope=scope)
 
@@ -277,14 +270,10 @@ def resnet_v2_152(inputs, # unit提升的主要场所是block3
                   scope='resnet_v2_152'):
   """ResNet-152 model of [1]. See resnet_v2() for arg and return description."""
   blocks = [
-      Block(
-          'block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
-      Block(
-          'block2', bottleneck, [(512, 128, 1)] * 7 + [(512, 128, 2)]),
-      Block(
-          'block3', bottleneck, [(1024, 256, 1)] * 35 + [(1024, 256, 2)]),
-      Block(
-          'block4', bottleneck, [(2048, 512, 1)] * 3)]
+      Block('block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
+      Block('block2', bottleneck, [(512, 128, 1)] * 7 + [(512, 128, 2)]),
+      Block('block3', bottleneck, [(1024, 256, 1)] * 35 + [(1024, 256, 2)]),
+      Block('block4', bottleneck, [(2048, 512, 1)] * 3)]
   return resnet_v2(inputs, blocks, num_classes, global_pool,
                    include_root_block=True, reuse=reuse, scope=scope)
 
@@ -296,14 +285,10 @@ def resnet_v2_200(inputs, # unit提升的主要场所是block2
                   scope='resnet_v2_200'):
   """ResNet-200 model of [2]. See resnet_v2() for arg and return description."""
   blocks = [
-      Block(
-          'block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
-      Block(
-          'block2', bottleneck, [(512, 128, 1)] * 23 + [(512, 128, 2)]),
-      Block(
-          'block3', bottleneck, [(1024, 256, 1)] * 35 + [(1024, 256, 2)]),
-      Block(
-          'block4', bottleneck, [(2048, 512, 1)] * 3)]
+      Block('block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
+      Block('block2', bottleneck, [(512, 128, 1)] * 23 + [(512, 128, 2)]),
+      Block('block3', bottleneck, [(1024, 256, 1)] * 35 + [(1024, 256, 2)]),
+      Block('block4', bottleneck, [(2048, 512, 1)] * 3)]
   return resnet_v2(inputs, blocks, num_classes, global_pool,
                    include_root_block=True, reuse=reuse, scope=scope)
 
