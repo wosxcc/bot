@@ -181,7 +181,6 @@ def bottleneck(inputs, depth, depth_bottleneck, stride,
     residual = slim.conv2d(residual, depth, [1, 1], stride=1,
                            normalizer_fn=None, activation_fn=None,
                            scope='conv3')
-
     output = shortcut + residual # 将降采样的结果和residual相加
 
     return slim.utils.collect_named_outputs(outputs_collections, # 将output添加进collection并返回output作为函数结果
@@ -203,7 +202,6 @@ def resnet_v2(inputs, # A tensor of size [batch, height_in, width_in, channels].
     with slim.arg_scope([slim.conv2d, bottleneck,
                          stack_blocks_dense],
                         outputs_collections=end_points_collection): # 将三个参数的outputs_collections默认设置为end_points_collection
-
       net = inputs
       if include_root_block: # 根据标记值
         with slim.arg_scope([slim.conv2d],
@@ -234,9 +232,6 @@ def resnet_v2_50(inputs, # 图像尺寸缩小了32倍
                  scope='resnet_v2_50'):
   blocks = [
       Block('block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
-
-
-
       # Args:：
       # 'block1'：Block名称（或scope）
       # bottleneck：ResNet V2残差学习单元
@@ -246,9 +241,6 @@ def resnet_v2_50(inputs, # 图像尺寸缩小了32倍
       # (256, 64, 3)代表构建的bottleneck残差学习单元（每个残差学习单元包含三个卷积层）中，第三层输出通道数
       # depth为256，前两层输出通道数depth_bottleneck为64，且中间那层步长3。这个残差学习单元结构为：
       # [(1*1/s1,64),(3*3/s2,64),(1*1/s1,256)]
-
-
-
       Block(
           'block2', bottleneck, [(512, 128, 1)] * 3 + [(512, 128, 2)]),
       Block(
