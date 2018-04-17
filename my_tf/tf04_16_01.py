@@ -153,6 +153,8 @@ def resnet_v2_200(inputs, num_classes = None, global_pool = True, reuse = None, 
         Block('block4', bottleneck, [(2048, 512, 1)] * 3)]
     return resnet_v2(inputs, blocks, num_classes, global_pool, include_root_block = True, reuse = reuse, scope = scope)
 
+
+###进行训练输出时间和，其他信息
 def time_tensorflow_run(session, target, info_string):
     num_batches = 100
     num_steps_burn_in = 10
