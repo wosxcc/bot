@@ -22,6 +22,8 @@ ResNet-101 for semantic segmentation into 21 classes:
 """
 import collections # 原生的collections库
 import tensorflow as tf
+import os
+import numpy as np
 slim = tf.contrib.slim # 使用方便的contrib.slim库来辅助创建ResNet
 
 
@@ -39,17 +41,6 @@ class Block(collections.namedtuple('Block', ['scope', 'unit_fn', 'args'])):
 
 ########定义一个降采样的方法########
 def subsample(inputs, factor, scope=None):
-  """Subsamples the input along the spatial dimensions.
-  Args:
-    inputs: A `Tensor` of size [batch, height_in, width_in, channels].
-    factor: The subsampling factor.（采样因子）
-    scope: Optional variable_scope.
-
-  Returns:
-    output: 如果factor为1，则不做修改直接返回inputs；如果不为1，则使用
-    slim.max_pool2d最大池化来实现，通过1*1的池化尺寸，stride作步长，实
-    现降采样。
-  """
   if factor == 1:
     return inputs
   else:
@@ -58,19 +49,6 @@ def subsample(inputs, factor, scope=None):
 
 ########创建卷积层########
 def conv2d_same(inputs, num_outputs, kernel_size, stride, scope=None):
-  """
-  Args:
-    inputs: A 4-D tensor of size [batch, height_in, width_in, channels].
-    num_outputs: An integer, the number of output filters.
-    kernel_size: An int with the kernel_size of the filters.
-    stride: An integer, the output stride.
-    rate: An integer, rate for atrous convolution.
-    scope: Scope.
-
-  Returns:
-    output: A 4-D tensor of size [batch, height_out, width_out, channels] with
-      the convolution output.
-  """
   if stride == 1:
     return slim.conv2d(inputs, num_outputs, kernel_size, stride=1,
                        padding='SAME', scope=scope)
@@ -90,16 +68,6 @@ def conv2d_same(inputs, num_outputs, kernel_size, stride, scope=None):
 @slim.add_arg_scope
 def stack_blocks_dense(net, blocks,
                        outputs_collections=None):
-  """
-  Args:
-    net: A `Tensor` of size [batch, height, width, channels].输入。
-    blocks: 是之前定义的Block的class的列表。
-    outputs_collections: 收集各个end_points的collections。
-
-  Returns:
-    net: Output tensor
-
-  """
   # 使用两层循环，逐个Residual Unit地堆叠
   for block in blocks: # 先使用两个tf.variable_scope将残差学习单元命名为block1/unit_1的形式
     with tf.variable_scope(block.scope, 'block', [net]) as sc:
@@ -147,16 +115,7 @@ def resnet_arg_scope(is_training=True, # 训练标记
 
 # 定义核心的bottleneck残差学习单元
 @slim.add_arg_scope
-def bottleneck(inputs, depth, depth_bottleneck, stride,
-               outputs_collections=None, scope=None):
-  """
-  Args:
-    inputs: A tensor of size [batch, height, width, channels].
-    depth、depth_bottleneck:、stride三个参数是前面blocks类中的args
-    rate: An integer, rate for atrous convolution.
-    outputs_collections: 是收集end_points的collection
-    scope: 是这个unit的名称。
-  """
+def bottleneck(inputs, depth, depth_bottleneck, stride,outputs_collections=None, scope=None):
   with tf.variable_scope(scope, 'bottleneck_v2', [inputs]) as sc: # slim.utils.last_dimension获取输入的最后一个维度，即输出通道数。
     depth_in = slim.utils.last_dimension(inputs.get_shape(), min_rank=4) # 可以限定最少为四个维度
     # 使用slim.batch_norm对输入进行batch normalization，并使用relu函数进行预激活preactivate
@@ -172,21 +131,15 @@ def bottleneck(inputs, depth, depth_bottleneck, stride,
       # 如果不一样就按步长和1*1的卷积改变其通道数，使得输入、输出通道数一致
 
     # 先是一个1*1尺寸，步长1，输出通道数为depth_bottleneck的卷积
-    residual = slim.conv2d(preact, depth_bottleneck, [1, 1], stride=1,
-                           scope='conv1')
+    residual = slim.conv2d(preact, depth_bottleneck, [1, 1], stride=1,scope='conv1')
     # 然后是3*3尺寸，步长为stride，输出通道数为depth_bottleneck的卷积
-    residual = conv2d_same(residual, depth_bottleneck, 3, stride,
-                                        scope='conv2')
+    residual = conv2d_same(residual, depth_bottleneck, 3, stride,scope='conv2')
     # 最后是1*1卷积，步长1，输出通道数depth的卷积，得到最终的residual。最后一层没有正则项也没有激活函数
     residual = slim.conv2d(residual, depth, [1, 1], stride=1,
                            normalizer_fn=None, activation_fn=None,
                            scope='conv3')
     output = shortcut + residual # 将降采样的结果和residual相加
-
-    return slim.utils.collect_named_outputs(outputs_collections, # 将output添加进collection并返回output作为函数结果
-                                            sc.name,
-                                            output)
-
+    return slim.utils.collect_named_outputs(outputs_collections,sc.name,output) # 将output添加进collection并返回output作为函数结果
 
 ########定义生成resnet_v2的主函数########
 def resnet_v2(inputs, # A tensor of size [batch, height_in, width_in, channels].输入
@@ -299,39 +252,198 @@ import math
 import time
 
 
+
+def mylosses(logits,lables):
+    with tf.variable_scope('loss') as scope:
+        cross_entropy=tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,
+                                                                     labels=lables,  ###lable不能是float类型的数据
+                                                                     name='cross_entropy')
+
+        print('cross_entropy',cross_entropy)
+        loss=tf.reduce_mean(cross_entropy,name='loss')
+        print('loss',loss)
+        tf.summary.scalar(scope.name+'loss',loss)
+    return loss
+
+
+
+def trainning(loss,learning_rate):
+    with tf.name_scope('optimizer'):
+        optimizer=tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
+        global_step=tf.Variable(0,name='global_step',trainable=False)
+        train_op=optimizer.minimize(loss,global_step=global_step)
+    return train_op
+
+
+def evaluation(logits,lables):
+    with tf.variable_scope('accuracy') as scope:
+        correct=tf.nn.in_top_k(logits,lables,1)
+        correct=tf.cast(correct,tf.float16)
+        accuracy=tf.reduce_mean(correct)
+        tf.summary.scalar(scope.name+'accuracy',accuracy)
+    return accuracy
 #-------------------评测函数---------------------------------
 # 测试152层深的ResNet的forward性能
-def time_tensorflow_run(session, target, info_string):
-    num_steps_burn_in = 10
-    total_duration = 0.0
-    total_duration_squared = 0.0
-    for i in range(num_batches + num_steps_burn_in):
-        start_time = time.time()
-        _ = session.run(target)
-        duration = time.time() - start_time
-        if i >= num_steps_burn_in:
-            if not i % 10:
-                print ('%s: step %d, duration = %.3f' %
-                       (datetime.now(), i - num_steps_burn_in, duration))
-            total_duration += duration
-            total_duration_squared += duration * duration
-    mn = total_duration / num_batches
-    vr = total_duration_squared / num_batches - mn * mn
-    sd = math.sqrt(vr)
-    print ('%s: %s across %d steps, %.3f +/- %.3f sec / batch' %
-           (datetime.now(), info_string, num_batches, mn, sd))
 
-batch_size = 32
-height, width = 224, 224
-inputs = tf.random_uniform((batch_size, height, width, 3))
-print('inputs',inputs)
-with slim.arg_scope(resnet_arg_scope(is_training=False)): # is_training设置为false
-   net, end_points = resnet_v2_101(inputs, 1000)
 
-init = tf.global_variables_initializer()
-sess = tf.Session()
-sess.run(init)
-num_batches=100
-time_tensorflow_run(sess, net, "Forward")
 
-# forward计算耗时相比VGGNet和Inception V3大概只增加了50%，是一个实用的卷积神经网络。
+def read_text():
+    face_path = []
+    noface_path = []
+    face_lables = []
+    noface_lables = []
+    for file in os.listdir('D:/bot/face_regress/neg'):
+        noface_path.append('D:/bot/face_regress/neg'+'/'+file)
+        noface_lables.append(0)
+    for file in os.listdir(r'D:/bot/face_regress/image_face_into'):
+        face_path.append(r'D:/bot/face_regress/image_face_into'+'/'+file)
+        face_lables.append(1)
+    image_list=np.hstack((face_path,noface_path))
+    lable_list = np.hstack((face_lables, noface_lables))
+    temp=np.array([image_list,lable_list])
+    temp=temp.transpose()
+    np.random.shuffle(temp)
+    all_image=list(temp[:,0])
+    all_lable=list(temp[:,1])
+
+    all_lable=[int(float(i)) for i in all_lable]
+    return all_image, all_lable
+
+
+def get_batch(image,xlable,img_W,img_H,batch_size,capacity):
+    image = tf.cast(image, tf.string)
+    input_queue = tf.train.slice_input_producer([image, xlable])
+    xlable = input_queue[1]
+    image_contents = tf.read_file(input_queue[0])
+    image = tf.image.decode_jpeg(image_contents, channels=3)
+    # image = tf.image.resize_images(image, [img_W, img_H], method=0)
+
+    image = tf.image.resize_image_with_crop_or_pad(image, img_W, img_H)
+    image = tf.image.random_brightness(image, max_delta=0.5)  ##在-0.5到0.5之间随机调整亮度
+    image = tf.image.random_contrast(image, lower=0.5, upper=1.5)  ###在-0.5到0.5之间随机调整亮度
+    image = tf.image.random_hue(image, 0.5)  ##在0-0.5之间随机调整图像饱和度
+
+    image = tf.image.per_image_standardization(image)
+    image_batch, xlable_batch = tf.train.batch([image, xlable],
+                                              batch_size=batch_size,
+                                              num_threads=32,
+                                              capacity=capacity)
+    xlable_batch = tf.reshape(xlable_batch, [batch_size])
+    # xlable_batch = tf.cast(xlable_batch, tf.int32)
+    image_batch = tf.cast(image_batch, tf.float32)
+
+    return image_batch,xlable_batch
+
+
+
+
+
+
+
+def run_trainning():
+    logs_face_file = './face/log04_17'
+
+    all_image, all_lable=read_text()
+    # print(all_image)
+    train_batch,train_lable_batch= get_batch(all_image, all_lable, img_W, img_H, batch_size, capacity)
+    # print('train_batch',train_batch)
+    with slim.arg_scope(resnet_arg_scope(is_training=False)):  # is_training设置为false
+        net, end_points = resnet_v2_101(train_batch, NUM_CLASS)
+
+
+    xxx_points=tf.reshape(end_points['predictions'],shape=[200,2])
+    # print('end_points[predictions]',end_points['predictions'])
+    # print('xxx_points',xxx_points)
+    # print('train_lable_batch',train_lable_batch)
+    train_loss=mylosses(xxx_points,train_lable_batch)
+    train_op=trainning(train_loss,learning_rate)
+    train_acc=evaluation(xxx_points,train_lable_batch)
+    summary_op=tf.summary.merge_all()
+
+
+
+
+    with tf.Session() as sess:
+        train_write=tf.summary.FileWriter(logs_face_file,sess.graph)
+        saver=tf.train.Saver()
+        sess.run(tf.global_variables_initializer())
+        ckpt = tf.train.get_checkpoint_state(logs_face_file)
+        if ckpt and ckpt.model_checkpoint_path:
+            global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+            saver.restore(sess,ckpt.model_checkpoint_path)
+        coord=tf.train.Coordinator()
+        threads=tf.train.start_queue_runners(sess=sess,coord=coord)
+        try:
+            for step in np.arange(num_batches):
+                if coord.should_stop():
+                    break
+                _ ,mtra_loss,mytra_acc=sess.run([train_op,train_loss,train_acc])
+                if step %10==0:
+                    print('%s: 第:%d次训练,loss值是:%.4f,准确率是:%.4f'%(datetime.now(),step,mtra_loss,mytra_acc) )
+
+                if step%20==0 or step==num_batches-1:
+                    checkpoint_path=os.path.join(logs_face_file,'model.ckpt')
+                    saver.save(sess,checkpoint_path,global_step=step)
+
+        except tf.errors.OutOfRangeError:
+            print('训练时出错')
+        finally:
+            coord.request_stop()
+
+
+        coord.join(threads)
+
+
+
+
+
+#
+# def time_tensorflow_run(session, target,end_points, info_string):
+#     num_steps_burn_in = 10
+#     total_duration = 0.0
+#     total_duration_squared = 0.0
+#     for i in range(num_batches + num_steps_burn_in):
+#         start_time = time.time()
+#         _ ,xcc_loss= session.run([target,end_points])
+#         print('xcc_loss', xcc_loss)
+#         print('我的天',_.shape,'xcc_loss',xcc_loss.shape)
+#
+#         # print(_)
+#
+#         duration = time.time() - start_time
+#         if i >= num_steps_burn_in:
+#             if not i % 10:
+#                 print('%s: step %d, duration = %.3f' %(datetime.now(), i - num_steps_burn_in, duration))
+#             total_duration += duration
+#             total_duration_squared += duration * duration
+#     mn = total_duration / num_batches
+#     vr = total_duration_squared / num_batches - mn * mn
+#     sd = math.sqrt(vr)
+#     print ('%s: %s across %d steps, %.3f +/- %.3f sec / batch' %
+#            (datetime.now(), info_string, num_batches, mn, sd))
+
+
+
+learning_rate=0.0001
+batch_size =200
+img_W, img_H = 48, 48
+capacity=64
+num_batches=50000
+NUM_CLASS=2
+run_trainning()
+
+# # inputs = tf.random_uniform((batch_size, img_W, img_H, 3))
+#
+#
+#
+# # with slim.arg_scope(resnet_arg_scope(is_training=False)):   # is_training设置为false
+# #    net, end_points = resnet_v2_101(inputs, 2)
+#
+# init = tf.global_variables_initializer()
+# sess = tf.Session()
+# sess.run(init)
+# ###最大迭代次数
+#
+# time_tensorflow_run(sess, net, end_points['predictions'],"Forward")
+#
+# # forward计算耗时相比VGGNet和Inception V3大概只增加了50%，是一个实用的卷积神经网络。
