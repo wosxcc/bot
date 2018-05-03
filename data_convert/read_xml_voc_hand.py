@@ -11,6 +11,7 @@ COUNT_motorbike=0
 xml_path='E:/xcc_download\VOC2007\Annotations'
 img_path='E:/xcc_download\VOC2007\JPEGImages'
 
+
 # xml_path='E:\BaiduNetdiskDownload\VOC 2012\VOCtrainval_11-May-2012\VOCdevkit\VOC2012\Annotations'
 # img_path='E:\BaiduNetdiskDownload\VOC 2012\VOCtrainval_11-May-2012\VOCdevkit\VOC2012\JPEGImages'
 now_count=659
