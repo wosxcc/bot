@@ -38,16 +38,36 @@ import tensorflow as tf
 
 # Import MNIST data
 from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
+import os
+import cv2 as cv
+
+image_path=[]
+imgs_data=np.zeros((30, 48, 48, 3))
+i=0
+for file_name in os.listdir('../images'):
+
+    image_path.append('../images/'+file_name)
+    img= cv.imread('../images/' + file_name)
+    imgs_data[i]=img
+    i+=1
+# print(imgs_data)
+# images = tf.cast(image_path, tf.string)
+# print(images)
+# input_queue = tf.train.slice_input_producer([images])
+# image_contents = tf.read_file(input_queue[0])
+#
+#
+# mnist = tf.image.decode_jpeg(image_contents, channels=3)
+# mnist = tf.image.resize_image_with_crop_or_pad(mnist, 48, 48)
+#
+print('我的天',imgs_data.shape)
+
+# mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
 
 # Training Params
-num_steps = 2000
-batch_size = 32
-
+num_steps = 20000
+batch_size = 30
 # Network Params
-image_dim = 784 # 28*28 pixels * 1 channel
-gen_hidden_dim = 256
-disc_hidden_dim = 256
 noise_dim = 200 # Noise data points
 
 
@@ -55,17 +75,20 @@ noise_dim = 200 # Noise data points
 #输入图像的噪声，输出
 def generator(x, reuse=False):
     with tf.variable_scope('Generator', reuse=reuse):
+        print('generator里面的',x)
         # TensorFlow Layers automatically create variables and calculate their
         # shape, based on the input.
-        x = tf.layers.dense(x, units=6 * 6 * 128)
+        x = tf.layers.dense(x, units=11 * 11 * 128)   # 全链接层
         x = tf.nn.tanh(x)
         # Reshape to a 4-D array of images: (batch, height, width, channels)
         # New shape: (batch, 6, 6, 128)
-        x = tf.reshape(x, shape=[-1, 6, 6, 128])
+        print('我去x:', x)
+        x = tf.reshape(x, shape=[-1, 11, 11, 128])      # 跟换数组结构
         # Deconvolution, image shape: (batch, 14, 14, 64)
-        x = tf.layers.conv2d_transpose(x, 64, 4, strides=2)    # tf.layers.conv2d_transpose 解卷积
+        x = tf.layers.conv2d_transpose(x, 64, 4, strides=2)
+        print('现在的x:',x)
         # 卷积，图像形状：（batch，28, 28, 1）
-        x = tf.layers.conv2d_transpose(x, 1, 2, strides=2)
+        x = tf.layers.conv2d_transpose(x, 3, 2, strides=2)   ##第二个参数是通道数
         #应用SigMID来剪辑0到1之间的值。
         x = tf.nn.sigmoid(x)
         return x
@@ -76,23 +99,25 @@ def generator(x, reuse=False):
 def discriminator(x, reuse=False):
     with tf.variable_scope('Discriminator', reuse=reuse):
         # Typical convolutional neural network to classify images.
+
         x = tf.layers.conv2d(x, 64, 5)
         x = tf.nn.tanh(x)
-        x = tf.layers.average_pooling2d(x, 2, 2)
+        x = tf.layers.average_pooling2d(x, 2, 2)        # 池化层
         x = tf.layers.conv2d(x, 128, 5)
-        x = tf.nn.tanh(x)
+        x = tf.nn.tanh(x)                               # 激活函数
         x = tf.layers.average_pooling2d(x, 2, 2)
         x = tf.contrib.layers.flatten(x)
         x = tf.layers.dense(x, 1024)
         x = tf.nn.tanh(x)
         # Output 2 classes: Real and Fake images
         x = tf.layers.dense(x, 2)
+        print('返回的x值',x)
     return x
 
 # 建立网络
 # 网络输入
 noise_input = tf.placeholder(tf.float32, shape=[None, noise_dim])
-real_image_input = tf.placeholder(tf.float32, shape=[None, 28, 28, 1])
+real_image_input = tf.placeholder(tf.float32, shape=[None, 48, 48, 3])
 
 # Build Generator Network
 gen_sample = generator(noise_input)
@@ -135,19 +160,21 @@ train_disc = optimizer_disc.minimize(disc_loss, var_list=disc_vars)
 init = tf.global_variables_initializer()
 
 # Start training
+saver = tf.train.Saver()
 with tf.Session() as sess:
-
+    logs_train_dir='creat_face/'
     # Run the initializer
     sess.run(init)
-
+    train_writer = tf.summary.FileWriter(logs_train_dir, sess.graph)
     for i in range(1, num_steps+1):
 
         # Prepare Input Data
         # 获取下一批MNIST数据（仅需要图像，而不是标签）
-        batch_x, _ = mnist.train.next_batch(batch_size)
-        print(batch_x.shape)
-        batch_x = np.reshape(batch_x, newshape=[-1, 28, 28, 1])
-        print(batch_x.shape)
+        # batch_x, _ = mnist.train.next_batch(batch_size)
+        # print(mnist.shape)
+        # print(mnist)
+        batch_x=imgs_data
+        # batch_x = np.reshape(mnist, newshape=[-1, 48, 48, 3])
         # 生成噪声馈送到生产者
         z = np.random.uniform(-1., 1., size=[batch_size, noise_dim])
 
@@ -160,7 +187,7 @@ with tf.Session() as sess:
         batch_gen_y = np.ones([batch_size])
 
         # Training
-        print('最后batch_x的值：',batch_x.shape)
+        print('最后的值',batch_x.shape)
         feed_dict = {real_image_input: batch_x, noise_input: z,
                      disc_target: batch_disc_y, gen_target: batch_gen_y}
         _, _, gl, dl = sess.run([train_gen, train_disc, gen_loss, disc_loss],
@@ -168,21 +195,26 @@ with tf.Session() as sess:
         if i % 100 == 0 or i == 1:
             print('Step %i: 产生图像 Loss值: %f, 对比 Loss值: %f' % (i, gl, dl))
 
+
+        if i % 2000 == 0 or (i + 1) == num_steps:
+            checkpoint_path = os.path.join(logs_train_dir, 'model.ckpt')
+            saver.save(sess, checkpoint_path, global_step=i)
+
     # Generate images from noise, using the generator network.
 
         ##使用生成器网络从噪声生成图像
-        # if  i % 400 == 0:
-    f, a = plt.subplots(5, 10, figsize=(10, 5))
+        # if  i % 500 == 0:
+    f, a = plt.subplots(4, 10, figsize=(10, 4))
     for i in range(10):
         # Noise input.
         z = np.random.uniform(-1., 1., size=[4, noise_dim])
         g = sess.run(gen_sample, feed_dict={noise_input: z})
         for j in range(4):
             # 从噪声中生成图像。扩展到Matlab图形的3个通道。
-            img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
-                             newshape=(28, 28, 3))
+            img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 1, axis=2),
+                             newshape=(48, 48, 3))
             a[j][i].imshow(img)
 
     f.show()
     plt.draw()
-    plt.waitforbuttonpress(30)
+    plt.waitforbuttonpress()

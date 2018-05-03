@@ -40,7 +40,7 @@ hparams = tensor_forest.ForestHParams(num_classes=num_classes,
                                       max_nodes=max_nodes).fill()
 
 # Build the Random Forest
-forest_graph = tensor_forest.RandomForestGraphs(hparams)
+forest_graph = tensor_forest.RandomForestGraphs(hparams) ##有问题
 # Get training graph and loss
 train_op = forest_graph.training_graph(X, Y)
 loss_op = forest_graph.training_loss(X, Y)

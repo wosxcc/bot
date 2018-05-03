@@ -47,6 +47,8 @@ def get_batch(image, position, img_W, img_H, batch_size, N_CLASSES, capacity):
     position = input_queue[1]
     image_contents = tf.read_file(input_queue[0])
     image = tf.image.decode_jpeg(image_contents, channels=3)
+
+    print (image)
     # image = tf.image.resize_images(image, [img_W, img_H], method=0)
 
     image = tf.image.resize_image_with_crop_or_pad(image, img_W, img_H)

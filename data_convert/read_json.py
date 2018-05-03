@@ -82,24 +82,24 @@ with open("E:/xcc_download/annotations_trainval2017 (2)/annotations/instances_tr
             # # print('date2',date2)
             # cv.imshow('img',img)
             # cv.waitKey()
-        ###自行车
-        if date2['category_id'] == 2 :
-            out_file_name = str(date2['image_id'])
-            # print(len(str(date2['image_id'])))
-            if len(str(date2['image_id'])) < 12:
-                for i in range(12 - len(str(date2['image_id']))):
-                    out_file_name = '0' + out_file_name
-            # print('自行车', out_file_name)
-            img = cv.imread('E:/xcc_download/train2017/' + out_file_name + '.jpg')
-            box = date2['bbox']
-            box = [int(i) for i in box]
-            img_X = float((box[0] + box[2] / 2) / img.shape[1])
-            img_Y = float((box[1] + box[3] / 2) / img.shape[0])
-            img_W = float((box[2] / 2) / img.shape[1])
-            img_H = float((box[3] / 2) / img.shape[0])
-            out_txt_into += '2 ' + str(img_X) + ' ' + str(img_Y) + ' ' + str(img_W) + ' ' + str(img_H) + '\n'
-
-
+        # ###自行车
+        # if date2['category_id'] == 2 :
+        #     out_file_name = str(date2['image_id'])
+        #     # print(len(str(date2['image_id'])))
+        #     if len(str(date2['image_id'])) < 12:
+        #         for i in range(12 - len(str(date2['image_id']))):
+        #             out_file_name = '0' + out_file_name
+        #     # print('自行车', out_file_name)
+        #     img = cv.imread('E:/xcc_download/train2017/' + out_file_name + '.jpg')
+        #     box = date2['bbox']
+        #     box = [int(i) for i in box]
+        #     img_X = float((box[0] + box[2] / 2) / img.shape[1])
+        #     img_Y = float((box[1] + box[3] / 2) / img.shape[0])
+        #     img_W = float((box[2] / 2) / img.shape[1])
+        #     img_H = float((box[3] / 2) / img.shape[0])
+        #     out_txt_into += '2 ' + str(img_X) + ' ' + str(img_Y) + ' ' + str(img_W) + ' ' + str(img_H) + '\n'
+        #
+        #
 
 
             # img = cv.ellipse(img, (int(img_X * img.shape[1]), int(img_Y * img.shape[0])), (int(img_W * img.shape[1]), int(img_H * img.shape[0])), 0, 0, 360, (255, 0, 5), 2)
@@ -115,39 +115,39 @@ with open("E:/xcc_download/annotations_trainval2017 (2)/annotations/instances_tr
             # cv.imshow('img',img)
             # cv.waitKey()
 
-        ###摩托车
-        if date2['category_id'] == 4:
-            out_file_name = str(date2['image_id'])
-            # print(len(str(date2['image_id'])))
-            if len(str(date2['image_id'])) < 12:
-                for i in range(12 - len(str(date2['image_id']))):
-                    out_file_name = '0' + out_file_name
-            # print('摩托车', out_file_name)
-            img = cv.imread('E:/xcc_download/train2017/' + out_file_name + '.jpg')
-            box = date2['bbox']
-            box = [int(i) for i in box]
-            img_X = float((box[0] + box[2] / 2) / img.shape[1])
-            img_Y = float((box[1] + box[3] / 2) / img.shape[0])
-            img_W = float((box[2] / 2) / img.shape[1])
-            img_H = float((box[3] / 2) / img.shape[0])
-            out_txt_into += '3 ' + str(img_X) + ' ' + str(img_Y) + ' ' + str(img_W) + ' ' + str(img_H) + '\n'
-
-
-
-
-            # img = cv.ellipse(img, (int(img_X * img.shape[1]), int(img_Y * img.shape[0])),
-            #                  (int(img_W * img.shape[1]), int(img_H * img.shape[0])), 0, 0, 360, (255, 0, 5), 2)
-            # img = cv.rectangle(img, (box[0], box[1]), (box[0] + box[2], box[1] + box[3]), (0, 255, 0), 2)
-            # segmentation = date2['segmentation']
-            # # segmentation = [int(i) for i in segmentation]
-            # for xian in segmentation:
-            #     xian = [int(i) for i in xian]
-            #     xian = np.array(xian).reshape(int(len(xian) / 2), 1, 2)
-            #     pts = np.array(xian, np.int32)
-            #     img = cv.polylines(img, [pts], True, (0, 255, 255), 2)
-            # print('摩托车', date2['image_id'], date2['bbox'])
-            # cv.imshow('img', img)
-            # cv.waitKey()
+        # ###摩托车
+        # if date2['category_id'] == 4:
+        #     out_file_name = str(date2['image_id'])
+        #     # print(len(str(date2['image_id'])))
+        #     if len(str(date2['image_id'])) < 12:
+        #         for i in range(12 - len(str(date2['image_id']))):
+        #             out_file_name = '0' + out_file_name
+        #     # print('摩托车', out_file_name)
+        #     img = cv.imread('E:/xcc_download/train2017/' + out_file_name + '.jpg')
+        #     box = date2['bbox']
+        #     box = [int(i) for i in box]
+        #     img_X = float((box[0] + box[2] / 2) / img.shape[1])
+        #     img_Y = float((box[1] + box[3] / 2) / img.shape[0])
+        #     img_W = float((box[2] / 2) / img.shape[1])
+        #     img_H = float((box[3] / 2) / img.shape[0])
+        #     out_txt_into += '3 ' + str(img_X) + ' ' + str(img_Y) + ' ' + str(img_W) + ' ' + str(img_H) + '\n'
+        #
+        #
+        #
+        #
+        #     # img = cv.ellipse(img, (int(img_X * img.shape[1]), int(img_Y * img.shape[0])),
+        #     #                  (int(img_W * img.shape[1]), int(img_H * img.shape[0])), 0, 0, 360, (255, 0, 5), 2)
+        #     # img = cv.rectangle(img, (box[0], box[1]), (box[0] + box[2], box[1] + box[3]), (0, 255, 0), 2)
+        #     # segmentation = date2['segmentation']
+        #     # # segmentation = [int(i) for i in segmentation]
+        #     # for xian in segmentation:
+        #     #     xian = [int(i) for i in xian]
+        #     #     xian = np.array(xian).reshape(int(len(xian) / 2), 1, 2)
+        #     #     pts = np.array(xian, np.int32)
+        #     #     img = cv.polylines(img, [pts], True, (0, 255, 255), 2)
+        #     # print('摩托车', date2['image_id'], date2['bbox'])
+        #     # cv.imshow('img', img)
+        #     # cv.waitKey()
 
         ##汽车车
         if date2['category_id'] == 3 or date2['category_id'] == 6 or date2['category_id'] == 8 :
@@ -183,25 +183,25 @@ with open("E:/xcc_download/annotations_trainval2017 (2)/annotations/instances_tr
             # cv.waitKey()
 
 
-        ##红绿灯
-        if date2['category_id'] == 10:
-            out_file_name = str(date2['image_id'])
-            # print(len(str(date2['image_id'])))
-            if len(str(date2['image_id'])) < 12:
-                for i in range(12 - len(str(date2['image_id']))):
-                    out_file_name = '0' + out_file_name
-
-            img = cv.imread('E:/xcc_download/train2017/' + out_file_name + '.jpg')
-            # print('红绿灯',out_file_name)
-            box = date2['bbox']
-            box = [int(i) for i in box]
-            img_X = float((box[0] + box[2] / 2) / img.shape[1])
-            img_Y = float((box[1] + box[3] / 2) / img.shape[0])
-            img_W = float((box[2] / 2) / img.shape[1])
-            img_H = float((box[3] / 2) / img.shape[0])
-            out_txt_into += '4 ' + str(img_X) + ' ' + str(img_Y) + ' ' + str(img_W) + ' ' + str(img_H) + '\n'
-
-
+        # ##红绿灯
+        # if date2['category_id'] == 10:
+        #     out_file_name = str(date2['image_id'])
+        #     # print(len(str(date2['image_id'])))
+        #     if len(str(date2['image_id'])) < 12:
+        #         for i in range(12 - len(str(date2['image_id']))):
+        #             out_file_name = '0' + out_file_name
+        #
+        #     img = cv.imread('E:/xcc_download/train2017/' + out_file_name + '.jpg')
+        #     # print('红绿灯',out_file_name)
+        #     box = date2['bbox']
+        #     box = [int(i) for i in box]
+        #     img_X = float((box[0] + box[2] / 2) / img.shape[1])
+        #     img_Y = float((box[1] + box[3] / 2) / img.shape[0])
+        #     img_W = float((box[2] / 2) / img.shape[1])
+        #     img_H = float((box[3] / 2) / img.shape[0])
+        #     out_txt_into += '4 ' + str(img_X) + ' ' + str(img_Y) + ' ' + str(img_W) + ' ' + str(img_H) + '\n'
+        #
+        #
 
             # img = cv.ellipse(img, (int(img_X * img.shape[1]), int(img_Y * img.shape[0])),
             #                  (int(img_W * img.shape[1]), int(img_H * img.shape[0])), 0, 0, 360, (255, 0, 5), 2)
@@ -220,7 +220,7 @@ with open("E:/xcc_download/annotations_trainval2017 (2)/annotations/instances_tr
         if len(out_txt_into)>3:
 
 
-            file_path = 'E:/COCO/train/'+out_file_name
+            file_path = 'E:/BOT_COCO/train/'+out_file_name
             image = cv.resize(img, (416, 416), interpolation=cv.INTER_CUBIC)
             cv.imwrite(file_path + '.jpg', image)
 

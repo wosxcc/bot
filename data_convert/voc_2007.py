@@ -90,17 +90,8 @@ for file_name in os.listdir(xml_path):
     # print(len(input_txt))
     if len(input_txt)>3:
         now_name=str(now_count)
-        if now_count<10:
-            now_name ='0000'+ str(now_count)
-        elif now_count>9 and  now_count<100:
-            now_name ='000'+ str(now_count)
-        elif now_count>99 and  now_count<1000:
-            now_name ='00'+ str(now_count)
-        elif now_count>999 and  now_count<10000:
-            now_name ='0'+ str(now_count)
-
-
-
+        for i in range(5-len(now_name)):
+            now_name='0'+now_name
 
         now_count+=1
         out_file='E:/BOT_train/train/'+now_name
