@@ -8,13 +8,13 @@ COUNT_person=0
 COUNT_bicycle=0
 COUNT_car=0
 COUNT_motorbike=0
-xml_path='E:/xcc_download\VOC2007\Annotations'
-img_path='E:/xcc_download\VOC2007\JPEGImages'
+# xml_path='E:/xcc_download\VOC2007\Annotations'
+# img_path='E:/xcc_download\VOC2007\JPEGImages'
 
 
-# xml_path='E:\BaiduNetdiskDownload\VOC 2012\VOCtrainval_11-May-2012\VOCdevkit\VOC2012\Annotations'
-# img_path='E:\BaiduNetdiskDownload\VOC 2012\VOCtrainval_11-May-2012\VOCdevkit\VOC2012\JPEGImages'
-now_count=659
+xml_path='E:\BaiduNetdiskDownload\VOC 2012\VOCtrainval_11-May-2012\VOCdevkit\VOC2012\Annotations'
+img_path='E:\BaiduNetdiskDownload\VOC 2012\VOCtrainval_11-May-2012\VOCdevkit\VOC2012\JPEGImages'
+now_count=0
 for file_name in os.listdir(xml_path):
     print(xml_path+'/'+file_name)
     per=et.parse(xml_path+'/'+file_name)
@@ -43,7 +43,7 @@ for file_name in os.listdir(xml_path):
             now_name='0'+now_name
 
         now_count+=1
-        out_file='E:/Face_Hand/train/'+now_name
+        out_file='E:/Hand/train/'+now_name
         out_txt = open(out_file+'.txt', 'w')
         out_txt.write(input_txt)
         out_txt.close()

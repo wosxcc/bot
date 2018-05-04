@@ -21,10 +21,17 @@ for file_name in os.listdir(mat_path):
                     print('我的天', bbox1)
                     for bbox2 in bbox1:
                         print(int(bbox2[0][0][0]),int(bbox2[0][0][1]))
-                        img = cv.circle(img, (int(bbox2[0][0][0]),int(bbox2[0][0][1])), 2, (0, 0, 255), -1)
-                        img = cv.circle(img, (int(bbox2[1][0][0]),int(bbox2[1][0][1])), 2, (0, 0, 255), -1)
-                        img = cv.circle(img, (int(bbox2[2][0][0]),int(bbox2[2][0][1])), 2, (0, 0, 255), -1)
-                        img = cv.circle(img, (int(bbox2[3][0][0]),int(bbox2[3][0][1])), 2, (0, 0, 255), -1)
+                        min_x = min(bbox2[0][0][1],bbox2[1][0][1],bbox2[2][0][1],bbox2[3][0][1])
+                        min_y = min(bbox2[0][0][0], bbox2[1][0][0], bbox2[2][0][0], bbox2[3][0][0])
+
+                        max_x = max(bbox2[0][0][1], bbox2[1][0][1], bbox2[2][0][1], bbox2[3][0][1])
+                        max_y = max(bbox2[0][0][0], bbox2[1][0][0], bbox2[2][0][0], bbox2[3][0][0])
+
+                        img =cv.rectangle(img,(int(min_x),int(min_y)),(int(max_x),int(max_y)),(255,0,0),1)
+                        img = cv.circle(img, (int(bbox2[0][0][1]),int(bbox2[0][0][0])), 2, (0, 0, 255), -1)
+                        img = cv.circle(img, (int(bbox2[1][0][1]),int(bbox2[1][0][0])), 2, (0, 0, 255), -1)
+                        img = cv.circle(img, (int(bbox2[2][0][1]),int(bbox2[2][0][0])), 2, (0, 0, 255), -1)
+                        img = cv.circle(img, (int(bbox2[3][0][1]),int(bbox2[3][0][0])), 2, (0, 0, 255), -1)
                         print('哈哈哈0', bbox2[0][0])
                         print('哈哈哈1', bbox2[1][0])
                         print('哈哈哈2', bbox2[2][0])
