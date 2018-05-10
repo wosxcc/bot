@@ -28,14 +28,15 @@ parser.add_argument('--epoch_step', dest='epoch_step', type=int, default=100,
                     help='# of epoch to decay lr')  # 训练中保持学习率不变的epoch数量
 parser.add_argument("--lamda", type=float, default=10.0, help="L1 lamda")  # 训练中L1_Loss前的乘数
 parser.add_argument('--beta1', dest='beta1', type=float, default=0.5, help='momentum term of adam')  # adam优化器的beta1参数
-parser.add_argument("--summary_pred_every", type=int, default=200,
+parser.add_argument("--summary_pred_every", type=int, default=20,
                     help="times to summary.")  # 训练中每过多少step保存训练日志(记录一下loss值)
-parser.add_argument("--write_pred_every", type=int, default=100, help="times to write.")  # 训练中每过多少step保存可视化结果
-parser.add_argument("--save_pred_every", type=int, default=10000, help="times to save.")  # 训练中每过多少step保存模型(可训练参数)
-parser.add_argument("--x_train_data_path", default='./dataset/horse2zebra/trainA/',
+parser.add_argument("--write_pred_every", type=int, default=10, help="times to write.")  # 训练中每过多少step保存可视化结果
+parser.add_argument("--save_pred_every", type=int, default=50, help="times to save.")  # 训练中每过多少step保存模型(可训练参数)
+parser.add_argument("--x_train_data_path", default='./image_data/trainA/',
                     help="path of x training datas.")  # x域的训练图片路径
-parser.add_argument("--y_train_data_path", default='./dataset/horse2zebra/trainB/',
+parser.add_argument("--y_train_data_path", default='./image_data/trainC/',
                     help="path of y training datas.")  # y域的训练图片路径
+
 
 args = parser.parse_args()
 
@@ -70,8 +71,13 @@ def get_write_picture(x_image, y_image, fake_y, fake_x_, fake_x, fake_y_):  # ge
 def make_train_data_list(x_data_path, y_data_path):  # make_train_data_list函数得到训练中的x域和y域的图像路径名称列表
     x_input_images_raw = glob.glob(os.path.join(x_data_path, "*"))  # 读取全部的x域图像路径名称列表
     y_input_images_raw = glob.glob(os.path.join(y_data_path, "*"))  # 读取全部的y域图像路径名称列表
-    x_input_images, y_input_images = add_train_list(x_input_images_raw, y_input_images_raw)  # 将x域图像数量与y域图像数量对齐
-    return x_input_images, y_input_images
+    # x_input_images, y_input_images = add_train_list(x_input_images_raw, y_input_images_raw)  # 将x域图像数量与y域图像数量对齐
+    # print('x_input_images', x_input_images)
+    # print('y_input_images', y_input_images)
+    # return x_input_images, y_input_images
+
+
+    return x_input_images_raw,y_input_images_raw
 
 
 def add_train_list(x_input_images_raw, y_input_images_raw):  # add_train_list函数将x域和y域的图像数量变成一致
@@ -110,12 +116,14 @@ def gan_loss(src, dst):  # 定义gan_loss，在这里用了二范数
 
 
 def main():
+    print('args',args)
     if not os.path.exists(args.snapshot_dir):  # 如果保存模型参数的文件夹不存在则创建
         os.makedirs(args.snapshot_dir)
     if not os.path.exists(args.out_dir):  # 如果保存训练中可视化输出的文件夹不存在则创建
         os.makedirs(args.out_dir)
     x_datalists, y_datalists = make_train_data_list(args.x_train_data_path,
                                                     args.y_train_data_path)  # 得到数量相同的x域和y域图像路径名称列表
+    print('x_datalists, y_datalists',x_datalists, y_datalists)
     tf.set_random_seed(args.random_seed)  # 初始一下随机数
     x_img = tf.placeholder(tf.float32, shape=[1, args.image_size, args.image_size, 3], name='x_img')  # 输入的x域图像
     y_img = tf.placeholder(tf.float32, shape=[1, args.image_size, args.image_size, 3], name='y_img')  # 输入的y域图像
@@ -177,10 +185,11 @@ def main():
     saver = tf.train.Saver(var_list=tf.global_variables(), max_to_keep=50)  # 模型保存器
 
     counter = 0  # counter记录训练步数
-
+    print(args)
     for epoch in range(args.epoch):  # 训练epoch数
-        shuffle(x_datalists)  # 每训练一个epoch，就打乱一下x域图像顺序
-        shuffle(y_datalists)  # 每训练一个epoch，就打乱一下y域图像顺序
+        # print('出错是因为没有数据')
+        np.random.shuffle(x_datalists)  # 每训练一个epoch，就打乱一下x域图像顺序
+        np.random.shuffle(y_datalists)  # 每训练一个epoch，就打乱一下y域图像顺序
         lrate = args.base_lr if epoch < args.epoch_step else args.base_lr * (args.epoch - epoch) / (
         args.epoch - args.epoch_step)  # 得到该训练epoch的学习率
         for step in range(len(x_datalists)):  # 每个训练epoch中的训练step数
@@ -211,4 +220,8 @@ def main():
 
 
 if __name__ == '__main__':
+
+    # img=cv2.imread('./image_data/trainA/0a0ac908186a83b294a515d49f8a443a_d.jpg')
+    # cv2.imshow('img',img)
+    # cv2.waitKey()
     main()  

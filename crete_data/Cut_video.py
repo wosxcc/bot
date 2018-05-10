@@ -5,6 +5,7 @@ import numpy as np
 import  math
 import  os
 
+
 drawing=False
 mode=True
 ix,iy=-1,-1             # 初始化位置
@@ -14,7 +15,7 @@ class0='hand'
 class1='face'
 
 
-windows_name='E:/dectect/dectect/cut_image/100.264'   # 视频文件位置
+windows_name='E:/dectect/dectect/cut_image/hz (7).mp4'   # 视频文件位置
 cap=cv.VideoCapture(windows_name)
 path='./train/'                                     # 文件保存位置
 img_copy=[]
@@ -72,41 +73,42 @@ def draw_circle(event,x,y,flags,param):
                              (int(mx + xwidth / 2), int(my + yheight / 2)), (255, 0, 255), 2)
             drawing=False
 count_c=0
-keep_num=int(len(os.listdir(path[0:-1]))/2)+965
+keep_num=int(len(os.listdir(path[0:-1]))/2)
 # keep_num=
 while(1):
     ret, img = cap.read()
     img_copy = np.copy(img)
     count_c+=1
-    if count_c%3==0:
-        cv.namedWindow(windows_name)
-        cv.setMouseCallback(windows_name,draw_circle)
-        sum_init = []
-        mode = True
-        while(1):
+    # if count_c%3==0:
+    cv.namedWindow(windows_name)
+    cv.setMouseCallback(windows_name,draw_circle)
+    sum_init = []
+    mode = True
+    while(1):
+        cv.imshow(windows_name, img_copy)
+        k=cv.waitKey(0)&0xFF
+        if k==ord('c'): # c转换类型
+            print('转换成功')
+            mode=not mode
             cv.imshow(windows_name, img_copy)
-            k=cv.waitKey(0)&0xFF
-            if k==ord('c'): # c转换类型
-                print('转换成功')
-                mode=not mode
-                cv.imshow(windows_name, img_copy)
-            elif k==ord('s'):       # s保存
-                if len(sum_init)>0:
-                    creat_name=str(keep_num)
-                    for i in range(int(5-len(creat_name))):
-                        creat_name='0'+creat_name
-                    cv.imwrite(path+creat_name+'.jpg',img)
-                    write_txt = open(path+creat_name+'.txt', 'w')
-                    output_txt=''
-                    for bbox in sum_init:
-                        output_txt+=str(bbox[0])+' '+str(bbox[1]/img.shape[1])+' '+str(bbox[2]/img.shape[0])+' '+str(bbox[3]/img.shape[1])+' '+str(bbox[4]/img.shape[0])+'\n'
-                    write_txt.write(output_txt)
-                    write_txt.close()
-                    print('保存成功：',sum_init)
-                    keep_num+=1
-                    break
-            elif k == ord('d'):             # 清屏
-                img_copy = np.copy(img)
-            elif k==32:  # 空格跳到下一帧
+        elif k==ord('s'):       # s保存
+            if len(sum_init)>0:
+                creat_name=str(keep_num)
+                for i in range(int(5-len(creat_name))):
+                    creat_name='0'+creat_name
+                cv.imwrite(path+creat_name+'.jpg',img)
+                write_txt = open(path+creat_name+'.txt', 'w')
+                output_txt=''
+                for bbox in sum_init:
+                    output_txt+=str(bbox[0])+' '+str(bbox[1]/img.shape[1])+' '+str(bbox[2]/img.shape[0])+' '+str(bbox[3]/img.shape[1])+' '+str(bbox[4]/img.shape[0])+'\n'
+                write_txt.write(output_txt)
+                write_txt.close()
+                print('保存成功：',sum_init)
+                keep_num+=1
                 break
+        elif k == ord('d'):             # 清屏
+            img_copy = np.copy(img)
+            sum_init = []
+        elif k==32:  # 空格跳到下一帧
+            break
 cv.destroyAllWindows()
