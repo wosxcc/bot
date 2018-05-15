@@ -4,6 +4,8 @@ import numpy as np
 
 paths='E:/person/CVC05-PartOcclusion/Annotations/txt'
 imgpath='E:/person/CVC05-PartOcclusion/FramesPos'
+
+
 pathss='E:/BOT_Person/trainb/'
 now_count=8000
 for file in os.listdir(paths):
@@ -20,14 +22,20 @@ for file in os.listdir(paths):
             box=box[:-1]
             box =[int(i) for i in box]
             img_X=float((box[0] + box[2]/2)/img.shape[1])
-            img_Y=float((box[0]+ box[3]/2 )/img.shape[0])
+            img_Y=float((box[1] + box[3]/2 )/img.shape[0])
             img_W=float(box[2]/img.shape[1])
             img_H=float(box[3]/img.shape[0])
             out_txt+='0 '+str(img_X)+' '+str(img_Y)+' '+str(img_W)+' '+str(img_H)+'\n'
-            img=cv.rectangle(img,(box[0],box[1]),(box[0]+box[2],box[1]+box[3]),(255,0,0),2)
+            # img = cv.rectangle(img, (box[0], box[1]), (box[0]+box[2], box[1]+box[3]), (255, 0, 0), 2)
+            # img = cv.rectangle(img,
+            #                    (int((img_X - img_W / 2) * img.shape[1]), int((img_Y - img_H / 2) * img.shape[0])),
+            #                    (int((img_X + img_W / 2) * img.shape[1]), int((img_Y + img_H / 2) * img.shape[0])),
+            #                    (0, 0, 255), 2)
         xxc+=1
-    print()
     print(out_txt)
+    # cv.imshow(file,img)
+    # cv.waitKey()
+    # cv.destroyAllWindows()
     if len(out_txt)>3:
         now_name=str(now_count)
         for i in range(5-len(now_name)):
