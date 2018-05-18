@@ -1,0 +1,13 @@
+.idea
+*.key
+*.pdf
+.nsml*
+*.pt
+X*
+mnist_data
+ppts
+.ipynb_checkpoints
+client_secret.json
+__pycache__/
+tmp
+template.pdf

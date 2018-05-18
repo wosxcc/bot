@@ -63,8 +63,8 @@ with open("E:/xcc_download/annotations_trainval2017 (2)/annotations/instances_tr
             box = [int(i) for i in box]
             img_X = float((box[0] + box[2] / 2) / img.shape[1] )
             img_Y = float((box[1] + box[3] / 2) / img.shape[0])
-            img_W = float((box[2] / 2) / img.shape[1])
-            img_H = float((box[3] / 2) / img.shape[0])
+            img_W = float((box[2]) / img.shape[1])
+            img_H = float((box[3]) / img.shape[0])
 
             out_txt_into+= '0 ' + str(img_X) + ' ' + str(img_Y) + ' ' + str(img_W) + ' ' + str(img_H) + '\n'
 

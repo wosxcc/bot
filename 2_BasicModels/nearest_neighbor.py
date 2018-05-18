@@ -46,8 +46,7 @@ with tf.Session() as sess:
         # Get nearest neighbor
         nn_index = sess.run(pred, feed_dict={xtr: Xtr, xte: Xte[i, :]})
         # Get nearest neighbor class label and compare it to its true label
-        print("Test", i, "Prediction:", np.argmax(Ytr[nn_index]), \
-            "True Class:", np.argmax(Yte[i]))
+        print("Test", i, "Prediction:", np.argmax(Ytr[nn_index]),"True Class:", np.argmax(Yte[i]))
         # Calculate accuracy
         if np.argmax(Ytr[nn_index]) == np.argmax(Yte[i]):
             accuracy += 1./len(Xte)

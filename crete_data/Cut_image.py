@@ -15,7 +15,7 @@ class0='hand'
 class1='face'
 
 
-windows_name='E:/xbot/pachong/person'   # 文件位置
+windows_name='E:/xbot/BUG/person'   # 文件位置
 path='./train_person/'                                     # 文件保存位置
 img_copy=[]
 sum_init=[]
