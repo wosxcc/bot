@@ -4,7 +4,7 @@ import os
 import math
 import cv2 as cv
 
-train_dir = 'D:/pproject/ppop/my_tf/cat_dog'
+train_dir = 'E:/BaiduNetdiskDownload/Dogs vs Cats Redux Kernels Edition'
 husky = []
 label_husky = []
 jiwawa = []
@@ -99,56 +99,71 @@ def get_batch(image, label, image_W, image_H, batch_size, capacity):
 def tf_layers(images, batch_size, n_classes):
     W1 = tf.get_variable('weights1', shape=(3, 3, 3, 32), dtype=tf.float32
                          , initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
-    # b1= tf.get_variable('biases',shaoe=[32],dtype=tf.float32
-    #                     ,initializer=tf.initialize_all_variables(0.1))
-    #
+    b1= tf.get_variable('biases1',shape=[32],dtype=tf.float32
+                        ,initializer=tf.constant_initializer(0.1))
     conv1 = tf.nn.conv2d(images, W1, strides=[1, 1, 1, 1], padding='SAME')
-    relu1 = tf.nn.relu(conv1, name='relu1')
+    relu1 = tf.nn.relu( tf.nn.bias_add(conv1, b1), name='relu1')
 
     W2 = tf.get_variable('weights2', shape=(3, 3, 32, 64), dtype=tf.float32,
                          initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
+    b2 = tf.get_variable('biases2', shape=[64], dtype=tf.float32
+                         , initializer=tf.constant_initializer(0.1))
     conv2 = tf.nn.conv2d(relu1, W2, strides=[1, 2, 2, 1], padding='SAME')
-    relu2 = tf.nn.relu(conv2, name='relu2')
+    relu2 = tf.nn.relu(tf.nn.bias_add(conv2, b2), name='relu2')
 
     W3 = tf.get_variable('weights3', shape=(3, 3, 64, 128), dtype=tf.float32,
                          initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
+    b3 = tf.get_variable('biases3', shape=[128], dtype=tf.float32
+                         , initializer=tf.constant_initializer(0.1))
     conv3 = tf.nn.conv2d(relu2, W3, strides=[1, 1, 1, 1], padding='SAME')
-    relu3 = tf.nn.relu(conv3, name='relu3')
+    relu3 = tf.nn.relu(tf.nn.bias_add(conv3, b3), name='relu3')
 
     W4 = tf.get_variable('weights4', shape=(3, 3, 128, 256), dtype=tf.float32,
                          initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
+    b4 = tf.get_variable('biases4', shape=[256], dtype=tf.float32
+                         , initializer=tf.constant_initializer(0.1))
     conv4 = tf.nn.conv2d(relu3, W4, strides=[1, 2, 2, 1], padding='SAME')
-    relu4 = tf.nn.relu(conv4, name='relu4')
+    relu4 = tf.nn.relu(tf.nn.bias_add(conv4, b4), name='relu4')
 
     W5 = tf.get_variable('weights5', shape=(3, 3, 256, 256), dtype=tf.float32,
                          initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
+    b5 = tf.get_variable('biases5', shape=[256], dtype=tf.float32
+                         , initializer=tf.constant_initializer(0.1))
     conv5 = tf.nn.conv2d(relu4, W5, strides=[1, 2, 2, 1], padding='SAME')
-    relu5 = tf.nn.relu(conv5, name='relu5')
+    relu5 = tf.nn.relu(tf.nn.bias_add(conv5, b5), name='relu5')
 
     W6 = tf.get_variable('weights6', shape=(3, 3, 256, 256), dtype=tf.float32,
                          initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
+    b6 = tf.get_variable('biases6', shape=[256], dtype=tf.float32
+                         , initializer=tf.constant_initializer(0.1))
     conv6 = tf.nn.conv2d(relu5, W6, strides=[1, 2, 2, 1], padding='SAME')
-    relu6 = tf.nn.relu(conv6, name='relu6')
+    relu6 = tf.nn.relu(tf.nn.bias_add(conv6, b6), name='relu6')
 
     W7 = tf.get_variable('weights7', shape=(1, 1, 256, 128), dtype=tf.float32,
-                         initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
+                         initializer=tf.truncated_normal_initializer(stddev=0.005, dtype=tf.float32))
+    b7 = tf.get_variable('biases7', shape=[128], dtype=tf.float32
+                         , initializer=tf.constant_initializer(0.1))
     conv7 = tf.nn.conv2d(relu6, W7, strides=[1, 1, 1, 1], padding='SAME')
-    relu7 = tf.nn.relu(conv7, name='relu7')
+    relu7 = tf.nn.relu(tf.nn.bias_add(conv7, b7), name='relu7')
 
     W8 = tf.get_variable('weights8', shape=(1, 1, 128, 128), dtype=tf.float32,
-                         initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
+                         initializer=tf.truncated_normal_initializer(stddev=0.005, dtype=tf.float32))
+    b8 = tf.get_variable('biases8', shape=[128], dtype=tf.float32
+                         , initializer=tf.constant_initializer(0.1))
     conv8 = tf.nn.conv2d(relu7, W8, strides=[1, 1, 1, 1], padding='SAME')
-    relu8 = tf.nn.relu(conv8, name='relu8')
+    relu8 = tf.nn.relu(tf.nn.bias_add(conv8, b8), name='relu8')
 
     W9 = tf.get_variable('weights9', shape=(1, 1, 128, 64), dtype=tf.float32,
-                         initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
+                         initializer=tf.truncated_normal_initializer(stddev=0.005, dtype=tf.float32))
+    b9 = tf.get_variable('biases9', shape=[64], dtype=tf.float32
+                         , initializer=tf.constant_initializer(0.1))
     conv9 = tf.nn.conv2d(relu8, W9, strides=[1, 1, 1, 1], padding='SAME')
-    relu9 = tf.nn.relu(conv9, name='relu9')
+    relu9 = tf.nn.relu(tf.nn.bias_add(conv9, b9), name='relu9')
 
     reshape = tf.reshape(relu9, shape=[batch_size, -1])
     dim = reshape.get_shape()[1].value
     W10 = tf.get_variable('weights10', shape=[dim, n_classes], dtype=tf.float32,
-                          initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
+                          initializer=tf.truncated_normal_initializer(stddev=0.005, dtype=tf.float32))
     biases = tf.get_variable("biases",
                              shape=[n_classes],
                              dtype=tf.float32,
@@ -159,21 +174,19 @@ def tf_layers(images, batch_size, n_classes):
 
 ###定义损失函数，返回损失值
 def losses(logits, lables):
-    print('logits',logits)
-    print('lables',lables)
     with tf.variable_scope("loss") as scope:
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,
-                                                                           labels=lables,
-                                                                       name='xentrop')
-        loss = tf.reduce_mean(cross_entropy, name='loss')
-        tf.summary.scalar(scope.name+'loss',loss)
+                                                                       labels=lables, name="xentropy_per_example")
+        loss = tf.reduce_mean(cross_entropy, name="loss")
+        tf.summary.scalar(scope.name + "loss", loss)
     return loss
 
 
 def trainning(loss, learning_rate):
-    optimizer = tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
-    global_step = tf.Variable(0, name='global_step', trainable=False)
-    train_op = optimizer.minimize(loss, global_step=global_step)
+    with tf.name_scope("optimizer"):
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+        global_step = tf.Variable(0, name="global_step", trainable=False)
+        train_op = optimizer.minimize(loss, global_step=global_step)
     return train_op
 
 
@@ -186,7 +199,7 @@ def evaluation(logits, labels):
 
 def run_training():
     logs_train_dir = './mycnn/log/'
-    train,train_label=get_files('D:/pproject/ppop/my_tf/cat_dog',0.2)
+    train,train_label=get_files('E:/BaiduNetdiskDownload/Dogs vs Cats Redux Kernels Edition',0.01)
 
     train_batch,train_label_batch=get_batch(train,train_label,IMG_W,IMG_H,BATCH_SIZE,
                                       CAPACITY)
@@ -196,12 +209,16 @@ def run_training():
     train_acc =evaluation(train_logits,train_label_batch)
 
     summary_op =tf.summary.merge_all()
-    sess =tf.Session()
+
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    sess =tf.Session(config=config)
     train_writer=tf.summary.FileWriter(logs_train_dir,sess.graph)
     saver= tf.train.Saver()
 
     sess.run(tf.global_variables_initializer())
     coord = tf.train.Coordinator()
+
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
     try:
         for step in np.arange(MAX_STEP):
