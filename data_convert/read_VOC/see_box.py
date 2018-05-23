@@ -1,11 +1,12 @@
-import  os
+import os
 import numpy as np
 import cv2 as cv
 
 
-paths='E:/BOT_Car/train   '
+# paths='E:/BOT_Person/train'
+paths='E:/xbot/crete_data/train'
 for file in os.listdir(paths):
-    if file[-4:]=='.txt' : ## and file[:-4]>'00500'
+    if file[-4:]=='.txt'  : ## and file[:-4]>'00500'  and file[:-4]>'50100'
         new_box=''
         new_txt =open(paths+'/'+file)
         old_data = new_txt.read()

@@ -15,7 +15,7 @@ class0='hand'
 class1='face'
 
 
-windows_name='E:/dectect/dectect/cut_image/hz (7).mp4'   # 视频文件位置
+windows_name='E:/BOT_Car/bot_car/test2.mp4'   # 视频文件位置
 cap=cv.VideoCapture(windows_name)
 path='./train/'                                     # 文件保存位置
 img_copy=[]
@@ -32,14 +32,14 @@ def draw_circle(event,x,y,flags,param):
         if drawing ==True:
             if mode==True:
                 im_draw = np.copy(img_copy)
-                cv.putText(im_draw, class0, (rex, rey+20),  cv.FONT_HERSHEY_SIMPLEX, 1,(255, 0, 0),2)
+                # cv.putText(im_draw, class0, (rex, rey+20),  cv.FONT_HERSHEY_SIMPLEX, 1,(255, 0, 0),2)
                 cv.line(im_draw, (rex, rey), (x, y), (0, 255, 255), 2)
                 cv.rectangle(im_draw, (rex, rey), (x, y), (255, 0, 0), 2)
                 ix, iy = x, y
                 cv.imshow(windows_name, im_draw)
             else:
                 im_draw = np.copy(img_copy)
-                cv.putText(im_draw,class1,(rex, rey+20),cv.FONT_HERSHEY_SIMPLEX,1,(255, 0, 255),2)
+                # cv.putText(im_draw,class1,(rex, rey+20),cv.FONT_HERSHEY_SIMPLEX,1,(255, 0, 255),2)
                 cv.line(im_draw, (rex, rey), (x, y), (0, 255, 255), 2)
                 cv.rectangle(im_draw, (rex, rey), (x, y), (255, 0, 255), 2)
                 ix, iy = x, y
@@ -59,21 +59,21 @@ def draw_circle(event,x,y,flags,param):
         max_y = rey if (y < rey) else y
         xwidth = abs(rex - x)
         yheight = abs(rey - y)
-        if xwidth*yheight>=400:
+        if xwidth*yheight>=200:
             # print('结束时的位置：rex,rey,x,y',mx,my,xwidth,yheight)
             if mode == True:                                # 如果是人类型是0
                 sum_init.append([0,mx,my,xwidth,yheight])
-                cv.putText(img_copy, class0, (int(mx-xwidth/2), int(my-yheight/2)+20), cv.FONT_HERSHEY_SIMPLEX,1, (255, 0, 0),2)
-                cv.rectangle(img_copy, (int(mx-xwidth/2), int(my-yheight/2)), (int(mx+xwidth/2), int(my+yheight/2)), (255, 0, 0), 2)
+                # cv.putText(img_copy, class0, (int(mx-xwidth/2), int(my-yheight/2)+20), cv.FONT_HERSHEY_SIMPLEX,1, (255, 0, 0),2)
+                cv.rectangle(img_copy, (int(mx-xwidth/2), int(my-yheight/2)), (int(mx+xwidth/2), int(my+yheight/2)), (255, 0, 0), 1)
             else:                                            # 如果是车类型是1
                 sum_init.append([1,mx,my,xwidth,yheight])
-                cv.putText(img_copy, class1, (int(mx - xwidth / 2), int(my - yheight / 2)+20), cv.FONT_HERSHEY_SIMPLEX, 1,
-                           (255, 0, 255), 2)
+                # cv.putText(img_copy, class1, (int(mx - xwidth / 2), int(my - yheight / 2)+20), cv.FONT_HERSHEY_SIMPLEX, 1,
+                #            (255, 0, 255), 2)
                 cv.rectangle(img_copy, (int(mx - xwidth / 2), int(my - yheight / 2)),
-                             (int(mx + xwidth / 2), int(my + yheight / 2)), (255, 0, 255), 2)
+                             (int(mx + xwidth / 2), int(my + yheight / 2)), (255, 0, 255), 1)
             drawing=False
 count_c=0
-keep_num=int(len(os.listdir(path[0:-1]))/2)
+keep_num=int(len(os.listdir(path[0:-1]))/2)+50003
 # keep_num=
 while(1):
     ret, img = cap.read()
