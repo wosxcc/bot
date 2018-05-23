@@ -29,7 +29,7 @@ with tf.Session() as  sess:
     for _ in range(2000):
         sess.run(train_set,feed_dict={x:x_date,y:y_date})
         prediction_value= sess.run(prediction,feed_dict={x:x_date})
-
+    print(prediction_value)
     plt.figure()
     plt.scatter(x_date,y_date)
     plt.plot(x_date,prediction_value,'r-',lw=3)

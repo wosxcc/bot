@@ -160,7 +160,6 @@ with tf.Session() as sess:
         batch_gen_y = np.ones([batch_size])
 
         # Training
-        print('最后batch_x的值：',batch_x.shape)
         feed_dict = {real_image_input: batch_x, noise_input: z,
                      disc_target: batch_disc_y, gen_target: batch_gen_y}
         _, _, gl, dl = sess.run([train_gen, train_disc, gen_loss, disc_loss],
