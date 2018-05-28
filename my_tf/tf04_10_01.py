@@ -214,7 +214,7 @@ def resnet_v2(inputs, # A tensor of size [batch, height_in, width_in, channels].
 
       if global_pool: # 根据标记添加全局平均池化层
         net = tf.reduce_mean(net, [1, 2], name='pool5', keep_dims=True) # tf.reduce_mean实现全局平均池化效率比avg_pool高
-      if num_classes is not None:  # 是否有通道数
+      if num_classes is not None:  # 是否类别数
         net = slim.conv2d(net, num_classes, [1, 1], activation_fn=None, # 无激活函数和正则项
                           normalizer_fn=None, scope='logits') # 添加一个输出通道num_classes的1*1的卷积
       end_points = slim.utils.convert_collection_to_dict(end_points_collection) # 将collection转化为python的dict

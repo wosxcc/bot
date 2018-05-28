@@ -111,12 +111,14 @@ def resnet_v2(inputs, blocks, num_classes = None, global_pool = True, include_ro
 
             if num_classes is not None:
                 end_points['predictions'] = slim.softmax(net, scope = 'predictions')
-
+            print('net',net)
             return net, end_points
 
 
 
 def resnet_v2_50(inputs, num_classes = None, global_pool = True, reuse = None, scope = 'resnet_v2_50'):
+
+    print(num_classes, global_pool, reuse)
     blocks = [
         Block('block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
         Block('block2', bottleneck, [(512, 128, 1)] * 3 + [(512, 128, 2)]),
@@ -161,7 +163,8 @@ def time_tensorflow_run(session, target, info_string):
         duration = time.time() - start_time
         if i >= num_steps_burn_in:
             if not i % 10:
-                print ('%s: step %d, duration = %.3f' % (datetime.now().strftime('%X'), i - num_steps_burn_in, duration))
+                print ('%s: 第 %d次, 耗时 = %.3f' % (datetime.now().strftime('%X'), i - num_steps_burn_in, duration))
+                print(session.run(target))
                 # 总持续时间
                 total_duration += duration
                 # 总持续时间平方和
@@ -178,7 +181,7 @@ batch_size = 32
 height, width = 224, 224
 inputs = tf.random_uniform((batch_size, height, width, 3))
 with slim.arg_scope(resnet_arg_scope(is_training = False)):
-    net, end_points = resnet_v2_152(inputs, 1000)
+    net, end_points = resnet_v2_50(inputs, 2)
 
 
 init = tf.global_variables_initializer()
