@@ -18,7 +18,7 @@ class Block(collections.namedtuple('Bolck', ['scope', 'unit_fn', 'args'])):
 
 
 
-train_dir = 'D:/pproject/ppop/my_tf/cat_dog'
+train_dir = 'E:/BaiduNetdiskDownload/Dogs vs Cats Redux Kernels Edition'
 husky = []
 label_husky = []
 jiwawa = []
@@ -284,7 +284,7 @@ def evaluation(logits, labels):
 
 def train_resnet():
     logs_train_dir = './resnet/log/'
-    train, train_label = get_files('D:/pproject/ppop/my_tf/cat_dog', 0.2)
+    train, train_label = get_files('E:/BaiduNetdiskDownload/Dogs vs Cats Redux Kernels Edition', 0.2)
 
     train_batch, train_label_batch = get_batch(train, train_label, IMG_W, IMG_H, BATCH_SIZE,
                                                CAPACITY)
@@ -336,7 +336,7 @@ def train_resnet():
 init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init)
-learning_rate=0.01
+learning_rate=0.0001
 num_batches = 100
 
 N_CLASSES = 2

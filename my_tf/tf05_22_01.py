@@ -1,3 +1,6 @@
+#自己写的无池化层的网络
+
+
 import tensorflow as tf
 import numpy as np
 import os

@@ -15,7 +15,7 @@ class0='hand'
 class1='face'
 
 
-windows_name='E:/BOT_Car/bot_car/test2.mp4'   # 视频文件位置
+windows_name='F:/person1.mp4'   # 视频文件位置
 cap=cv.VideoCapture(windows_name)
 path='./train/'                                     # 文件保存位置
 img_copy=[]
@@ -73,10 +73,12 @@ def draw_circle(event,x,y,flags,param):
                              (int(mx + xwidth / 2), int(my + yheight / 2)), (255, 0, 255), 1)
             drawing=False
 count_c=0
-keep_num=int(len(os.listdir(path[0:-1]))/2)+50003
+keep_num=int(len(os.listdir(path[0:-1]))/2)+81002
 # keep_num=
 while(1):
     ret, img = cap.read()
+
+    img=cv.resize(img,(1000,800),cv.INTER_CUBIC)
     img_copy = np.copy(img)
     count_c+=1
     # if count_c%3==0:

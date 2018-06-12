@@ -2,10 +2,11 @@ import cv2 as cv
 import os
 
 
-paths='F:/BOT_Two/train'
+paths='E:/xbot/crete_data/train'
 # paths='E:/xbot/crete_data/train'
+paths ='E:/BOT_Car/train'
 for file in os.listdir(paths):
-    if file[-4:]=='.jpg':
+    if file[-4:]=='.jpg' : ##
         img=cv.imread(paths + '/' +file)
         new_box = ''
         new_txt = open(paths + '/' + file[:-4]+'.txt')
