@@ -17,20 +17,23 @@ def get_file_content(filePath):
     return params
 
 print(123456)
-image=get_file_content('../face_into/face68/image_test/sface_3140.jpg')
+image='../face_into/face68/image_test/sface_3140.jpg'
 
-# img=cv.imread(image)
+img=cv.imread(image)
+
+# imgsss=base64.b64encode(img)
+# print(imgsss)
 # cv.imshow('img',img)
 # cv.waitKey()
 
 
 """ 调用人脸检测 """
-
-print (client.detect(image, imageType))
+print(get_file_content(image))
+print (client.detect(get_file_content(image), imageType))
 
 """ 如果有可选参数 """
 options = {}
-options['face_field'] = 'age'
+options['face_field'] = 'landmark72'
 options['max_face_num'] = '2'
 options['face_type'] = 'LIVE'
 
