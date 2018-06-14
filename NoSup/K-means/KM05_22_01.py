@@ -14,8 +14,8 @@ centers = [[-7, -7], [-8, 7.5], [9.5, -6], [9, 8.5]] # 簇中心
 # 生成人工数据集
 #data, features = make_circles(n_samples=200, shuffle=True, noise=0.1, factor=0.4)
 data, features = make_blobs(n_samples=N, centers=centers, n_features = 2, cluster_std=0.8, shuffle=False, random_state=42)
-print(data)
-print(features)
+# print(data)
+# print(features)
 
 # 计算类内平均值函数
 def clusterMean(data, id, num):
@@ -27,6 +27,9 @@ def clusterMean(data, id, num):
 points = tf.Variable(data)
 cluster = tf.Variable(tf.zeros([N], dtype=tf.int64))
 centers = tf.Variable(tf.slice(points.initialized_value(), [0, 0], [K, 2]))# 将原始数据前k个点当做初始中心
+
+###  [[-6, -6], [-7, 6.5], [8.5, -8], [10, 9.5]]     # //
+
 repCenters = tf.reshape(tf.tile(centers, [N, 1]), [N, K, 2]) # 复制操作，便于矩阵批量计算距离
 repPoints = tf.reshape(tf.tile(points, [1, K]), [N, K, 2])
 sumSqure = tf.reduce_sum(tf.square(repCenters-repPoints), reduction_indices=2) # 计算距离
@@ -38,6 +41,9 @@ with tf.control_dependencies([change]):
     update = tf.group(centers.assign(means),cluster.assign(bestCenter)) # 复制函数
 
 with tf.Session() as sess:
+    # print('欧度打手电阿萨德按时')
+    # print('centers',centers)
+    # print('centers',sess.run(centers))
     sess.run(tf.initialize_all_variables())
     changed = True
     iterNum = 0
@@ -51,7 +57,7 @@ with tf.Session() as sess:
         print(iterNum)
 
         # 显示图像
-    print(clusterArr)
+    # print(clusterArr)
     print(centersArr)
     fig, ax = plt.subplots()
     ax.scatter(data.transpose()[0], data.transpose()[1], marker='o', s=100, c=clusterArr)

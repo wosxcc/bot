@@ -202,7 +202,7 @@ def evaluation(logits, labels):
 
 def run_training():
     logs_train_dir = './mycnn/log/'
-    train,train_label=get_files('E:/BaiduNetdiskDownload/Dogs vs Cats Redux Kernels Edition',0.01)
+    train,train_label=get_files('D:/pproject/ppop/my_tf/cat_dog',0.01)
 
     train_batch,train_label_batch=get_batch(train,train_label,IMG_W,IMG_H,BATCH_SIZE,
                                       CAPACITY)

@@ -72,7 +72,6 @@ x1_vals = [d[1] for d in x_vals]
 for i in x1_vals:
     best_fit.append(slope*i+y_intercept)
 
-
 # Separate I. setosa
 setosa_x = [d[1] for i, d in enumerate(x_vals) if y_vals[i] == 1]
 setosa_y = [d[0] for i, d in enumerate(x_vals) if y_vals[i] == 1]

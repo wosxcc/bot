@@ -35,13 +35,14 @@ from __future__ import division, print_function, absolute_import
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+import  os
 
 # Import MNIST data
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
-
+print('看看值',mnist)
 # Training Params
-num_steps = 2000
+num_steps = 10000
 batch_size = 32
 
 # Network Params
@@ -68,6 +69,7 @@ def generator(x, reuse=False):
         x = tf.layers.conv2d_transpose(x, 1, 2, strides=2)
         #应用SigMID来剪辑0到1之间的值。
         x = tf.nn.sigmoid(x)
+        print(x)
         return x
 
 
@@ -135,53 +137,91 @@ train_disc = optimizer_disc.minimize(disc_loss, var_list=disc_vars)
 init = tf.global_variables_initializer()
 
 # Start training
-with tf.Session() as sess:
+def gan_train():
+    with tf.Session() as sess:
 
-    # Run the initializer
-    sess.run(init)
+        # Run the initializer
+        updata_gan = './gan/log'
+        train_write= tf.summary.FileWriter(updata_gan,sess.graph)
+        saver= tf.train.Saver()
+        sess.run(init)
+        ckpt=tf.train.get_checkpoint_state(updata_gan)
+        if ckpt and ckpt.model_checkpoint_path:
+            global_step=ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+            saver.restore(sess,ckpt.model_checkpoint_path)
 
-    for i in range(1, num_steps+1):
+        for i in range(1, num_steps+1):
 
-        # Prepare Input Data
-        # 获取下一批MNIST数据（仅需要图像，而不是标签）
-        batch_x, _ = mnist.train.next_batch(batch_size)
-        print(batch_x.shape)
-        batch_x = np.reshape(batch_x, newshape=[-1, 28, 28, 1])
-        print(batch_x.shape)
-        # 生成噪声馈送到生产者
-        z = np.random.uniform(-1., 1., size=[batch_size, noise_dim])
+            # Prepare Input Data
+            # 获取下一批MNIST数据（仅需要图像，而不是标签）
+            batch_x, _ = mnist.train.next_batch(batch_size)
+            # print(batch_x.shape)
+            batch_x = np.reshape(batch_x, newshape=[-1, 28, 28, 1])
+            # print(batch_x.shape)
+            # 生成噪声馈送到生产者
+            z = np.random.uniform(-1., 1., size=[batch_size, noise_dim])
 
-        # Prepare Targets (Real image: 1, Fake image: 0)
-        # The first half of data fed to the generator are real images,
-        # the other half are fake images (coming from the generator).
-        batch_disc_y = np.concatenate(
-            [np.ones([batch_size]), np.zeros([batch_size])], axis=0)
-        # Generator tries to fool the discriminator, thus targets are 1.
-        batch_gen_y = np.ones([batch_size])
+            # Prepare Targets (Real image: 1, Fake image: 0)
+            # The first half of data fed to the generator are real images,
+            # the other half are fake images (coming from the generator).
+            batch_disc_y = np.concatenate(
+                [np.ones([batch_size]), np.zeros([batch_size])], axis=0)
+            # Generator tries to fool the discriminator, thus targets are 1.
+            batch_gen_y = np.ones([batch_size])
 
-        # Training
-        feed_dict = {real_image_input: batch_x, noise_input: z,
-                     disc_target: batch_disc_y, gen_target: batch_gen_y}
-        _, _, gl, dl = sess.run([train_gen, train_disc, gen_loss, disc_loss],
-                                feed_dict=feed_dict)
-        if i % 100 == 0 or i == 1:
-            print('Step %i: 产生图像 Loss值: %f, 对比 Loss值: %f' % (i, gl, dl))
+            # Training
+            feed_dict = {real_image_input: batch_x, noise_input: z,
+                         disc_target: batch_disc_y, gen_target: batch_gen_y}
+            _, _, gl, dl = sess.run([train_gen, train_disc, gen_loss, disc_loss],
+                                    feed_dict=feed_dict)
+            if i % 100 == 0 or i == 1:
+                print('Step %i: 产生图像 Loss值: %f, 对比 Loss值: %f' % (i, gl, dl))
+            if i % 500 == 0 or i == num_steps:
+                checkpoint_path = os.path.join(updata_gan,'model.ckpt')
+                saver.save(sess,checkpoint_path,global_step=i)
 
-    # Generate images from noise, using the generator network.
+        # Generate images from noise, using the generator network.
 
-        ##使用生成器网络从噪声生成图像
-        # if  i % 400 == 0:
-    f, a = plt.subplots(5, 10, figsize=(10, 5))
-    for i in range(10):
-        # Noise input.
-        z = np.random.uniform(-1., 1., size=[4, noise_dim])
-        g = sess.run(gen_sample, feed_dict={noise_input: z})
-        for j in range(4):
-            # 从噪声中生成图像。扩展到Matlab图形的3个通道。
-            img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
-                             newshape=(28, 28, 3))
-            a[j][i].imshow(img)
+            ##使用生成器网络从噪声生成图像
+            # if  i % 400 == 0:
+        f, a = plt.subplots(5, 10, figsize=(10, 5))
+        for i in range(10):
+            # Noise input.
+            z = np.random.uniform(-1., 1., size=[5, noise_dim])
 
-    f.show()
-    plt.draw()
-    plt.waitforbuttonpress(30)
+            g = sess.run(gen_sample, feed_dict={noise_input: z})
+
+            for j in range(5):
+                # 从噪声中生成图像。扩展到Matlab图形的3个通道。
+                img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
+                                 newshape=(28, 28, 3))
+                a[j][i].imshow(img)
+
+        f.show()
+        plt.draw()
+        plt.waitforbuttonpress(30)
+
+
+def gangangan():
+    updata_gan = './gan/log'
+    # with tf.Graph().as_default():
+    saver = tf.train.Saver()
+    with tf.Session() as sess:
+        ckpt = tf.train.get_checkpoint_state(updata_gan)
+        if ckpt and ckpt.model_checkpoint_path:
+            global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            f, a = plt.subplots(5, 10, figsize=(10, 5))
+            for i in range(10):
+                # Noise input.
+                z = np.random.uniform(-0.5, 0.5, size=[5, noise_dim])
+                g = sess.run(gen_sample, feed_dict={noise_input: z})
+                for j in range(5):
+                    # 从噪声中生成图像。扩展到Matlab图形的3个通道。
+                    img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
+                                     newshape=(28, 28, 3))
+                    a[j][i].imshow(img)
+            f.show()
+            plt.draw()
+            plt.show()
+gangangan()

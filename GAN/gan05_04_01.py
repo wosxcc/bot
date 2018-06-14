@@ -1,7 +1,5 @@
-
 import os
 import time
-import math
 from glob import glob
 import tensorflow as tf
 import numpy as np

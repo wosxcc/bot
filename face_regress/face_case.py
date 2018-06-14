@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import cv2 as cv
-from image_read import readimg
 
 NOW_CLASS='face'  ## blouse  dress   outwear   skirt   trousers
 position=[]
@@ -64,6 +63,14 @@ def get_batch(image, position, img_W, img_H, batch_size, N_CLASSES, capacity):
     position_batch = tf.reshape(position_batch, [batch_size, N_CLASSES])
     image_batch = tf.cast(image_batch, tf.float32)
     return image_batch, position_batch
+
+
+def get_weights(shape,lamdb):
+    var = tf.Variable(tf.random_normal(shape),dtype=tf.float32)
+    tf.add_to_collection('losses',tf.contrib.layers.l2_regularizer(lamdb)(var))
+
+    return var
+
 
 
 def inference(images, y_data, batch_size, n_classes):
@@ -171,6 +178,10 @@ def inference(images, y_data, batch_size, n_classes):
         y_conv = tf.add(tf.matmul(fc3, weights), biases, name="softmax_linear")
         rmse = tf.sqrt(tf.reduce_mean(tf.square(y_data - y_conv)))
     return y_conv, rmse
+
+
+layers_into=[32,64,128,128,32,2]
+lay_count =len(layers_into)
 
 
 def trainning(loss, learning_rate):
