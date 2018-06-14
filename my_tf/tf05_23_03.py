@@ -5,6 +5,8 @@ import time
 import math
 import os
 import numpy as np
+import cv2 as cv
+import datetime
 from datetime import datetime
 slim = tf.contrib.slim
 
@@ -192,7 +194,8 @@ def bottleneck(inputs, depth, depth_bottleneck, stride, outputs_collections = No
 
 
 
-def resnet_v2(inputs, blocks, num_classes = None, global_pool = True, include_root_block = True, reuse = None, scope = None):
+def resnet_v2(inputs, blocks, BATCH_SIZE, num_classes = None, global_pool = True, include_root_block = True, reuse = None, scope = None):
+    print('inputs, blocks, BATCH_SIZE',inputs, blocks, BATCH_SIZE)
     with tf.variable_scope(scope, 'resnet_v2', [inputs], reuse = reuse) as sc:
         end_points_collection = sc.original_name_scope + '_end_points'
         with slim.arg_scope([slim.conv2d, bottleneck, stack_blocks_dense], outputs_collections = end_points_collection):
@@ -220,7 +223,7 @@ def resnet_v2(inputs, blocks, num_classes = None, global_pool = True, include_ro
 
 
 
-def resnet_v2_50(inputs, num_classes = None, global_pool = True, reuse = None, scope = 'resnet_v2_50'):
+def resnet_v2_50(inputs,BATCH_SIZE, num_classes = None, global_pool = True, reuse = None, scope = 'resnet_v2_50'):
 
     print(num_classes, global_pool, reuse)
     blocks = [
@@ -228,7 +231,7 @@ def resnet_v2_50(inputs, num_classes = None, global_pool = True, reuse = None, s
         Block('block2', bottleneck, [(512, 128, 1)] * 3 + [(512, 128, 2)]),
         Block('block3', bottleneck, [(1024, 256, 1)] * 5 + [(1024, 256, 2)]),
         Block('block4', bottleneck, [(2048, 1024, 1)] * 3)]
-    return resnet_v2(inputs, blocks, num_classes, global_pool, include_root_block = True, reuse = reuse, scope = scope)
+    return resnet_v2(inputs, blocks,BATCH_SIZE, num_classes, global_pool, include_root_block = True, reuse = reuse, scope = scope)
 
 
 def resnet_v2_101(inputs, num_classes = None, global_pool = True, reuse = None, scope = 'resnet_v2_101'):
@@ -257,9 +260,6 @@ def resnet_v2_200(inputs, num_classes = None, global_pool = True, reuse = None, 
 
 
 def losses(logits, labels):
-
-    print('logits',logits)
-    print('labels',labels)
     with tf.variable_scope("loss") as scope:
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,
                                                                        labels=labels, name="xe")
@@ -299,6 +299,12 @@ def train_resnet():
     saver = tf.train.Saver()
 
     sess.run(tf.global_variables_initializer())
+
+    ckpt = tf.train.get_checkpoint_state(logs_train_dir)
+    if ckpt and ckpt.model_checkpoint_path:
+        global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+        saver.restore(sess, ckpt.model_checkpoint_path)
+
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
     try:
@@ -326,10 +332,64 @@ def train_resnet():
 
 
 
-# batch_size = 32
-# height, width = 224, 224
-# inputs = tf.random_uniform((batch_size, height, width, 3))
-# with slim.arg_scope(resnet_arg_scope(is_training = False)):
+def get_one_image(img_dir):
+    image = cv.imread(img_dir)
+
+    # 好像一次只能打开一张图片，不能一次打开一个文件夹，这里大家可以去搜索一下
+    min_bian=min(image.shape[0],image.shape[1])
+    max_bian = max(image.shape[0], image.shape[1])
+
+    if min_bian/max_bian<0.6:
+        bei_x = 48 / max_bian
+        if image.shape[0] == min_bian:
+            cha = int((image.shape[1] - min_bian) / 2)
+            images = np.zeros((image.shape[1], image.shape[1], 3), np.uint8)
+            images[cha:cha + min_bian, :, :] = image
+            image = cv.resize(images, None, fx=bei_x, fy=bei_x, interpolation=cv.INTER_CUBIC)
+        else:
+            cha = int((image.shape[0] - min_bian) / 2)
+            images = np.zeros((image.shape[0], image.shape[0], 3), np.uint8)
+            images[:, cha:cha + min_bian, :] = image
+            image = cv.resize(images, None, fx=bei_x, fy=bei_x, interpolation=cv.INTER_CUBIC)
+    else:
+        bei_x = 48 / min_bian
+        if image.shape[0]>min_bian:
+            cha=int((image.shape[0]-min_bian)/2)
+            image = cv.resize(image[cha:min_bian+cha,:], None, fx=bei_x, fy=bei_x, interpolation=cv.INTER_CUBIC)
+        else:
+            cha = int((image.shape[1] - min_bian) / 2)
+            image = cv.resize(image[:,cha:min_bian+cha], None, fx=bei_x, fy=bei_x, interpolation=cv.INTER_CUBIC)
+    # cv.imshow('image',image)
+    # cv.waitKey()
+    image_arr = np.array(image)
+    return image_arr
+
+
+def test(test_file):
+    log_dir = './resnet/log/'
+    # image_arr=test_file
+    image_arr = get_one_image(test_file)
+    with tf.Graph().as_default():
+        image = tf.cast(image_arr, tf.float32)
+        image = tf.image.per_image_standardization(image)
+        image = tf.reshape(image, [1, 48, 48, 3])
+        p, end_points = resnet_v2_50(image,1,2)
+        # p = tf.reshape(p, shape=[1, -1])
+        logits = tf.nn.softmax(p)
+        x = tf.placeholder(tf.float32,shape = [48,48,3])
+        saver = tf.train.Saver()
+        with tf.Session() as sess:
+            ckpt = tf.train.get_checkpoint_state(log_dir)
+            if ckpt and ckpt.model_checkpoint_path:
+                global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+                saver.restore(sess, ckpt.model_checkpoint_path)
+                #调用saver.restore()函数，加载训练好的网络模型
+                print('Loading success')
+            else:
+                print('No checkpoint')
+            prediction = sess.run(logits, feed_dict={x: image_arr})
+            return prediction
+
 
 
 
@@ -345,4 +405,29 @@ IMG_H = 48
 BATCH_SIZE = 100
 CAPACITY = 64
 MAX_STEP = 10000
-train_resnet()
+# train_resnet()
+
+pathsss='D:/pproject/ppop/img_test'
+for test_file in os.listdir(pathsss):
+
+    print(pathsss+'/'+test_file)
+
+    xtime=datetime.now()
+    prediction = test(pathsss + '/' + test_file)
+    print('耗时:',datetime.now()-xtime)
+    max_index = np.argmax(prediction)
+    img =cv.imread(pathsss+'/'+test_file)
+
+    if max_index == 0:
+        print('是狗的概率是：', prediction[0][0])
+        cv.putText(img, 'dog:{}'.format(str(prediction[0][0])), (0, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    elif max_index == 1:
+        cv.putText(img, 'cat:{}'.format(str(prediction[0][1])), (0, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        print('是猫的概率是：', prediction[0][1])
+    cv.imshow('img', img)
+    cv.waitKey()
+
+
+
+
+
