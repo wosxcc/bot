@@ -18,7 +18,7 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-file_path= 'E:/face into'
+file_path= 'E:/dectect/dectect/face68'
 for file in os.listdir(file_path):
     img_path=file_path+'/'+file
 # img_path = '../face_into/face68/image_test/sface_4241f.jpg'
@@ -55,33 +55,47 @@ for file in os.listdir(file_path):
     options['face_type'] = 'LIVE'
     xcc=client.detect(img_base64, 'BASE64', options=options)
     print(xcc)
-    if xcc['result'] !=None:
-        location=xcc['result']['face_list'][0]['location']
-        left_top=(int(location['left'])*10,int(location['top'])*10)
+    if 'result' in xcc:
+        if xcc['result'] !=None :
+            location=xcc['result']['face_list'][0]['location']
+            left_top=(int(location['left'])*10,int(location['top'])*10)
 
 
-        right_bottom=(int(left_top[0]+location['width'])*10,int(left_top[1]+location['height'])*10)
-        img=cv.imread(img_path)
+            right_bottom=(int(left_top[0]+location['width'])*10,int(left_top[1]+location['height'])*10)
+            img=cv.imread(img_path)
 
-        img=cv.resize(img, None, fx=10, fy=10, interpolation=cv.INTER_CUBIC)
-
-        cv.rectangle(img,left_top,right_bottom,(0,0,255),2)
-
+            # img=cv.resize(img, None, fx=10, fy=10, interpolation=cv.INTER_CUBIC)
+            # cv.rectangle(img,left_top,right_bottom,(0,0,255),2)
 
 
-        face72=xcc['result']['face_list'][0]['landmark72']
-        for face_init in face72:
-            cv.circle(img,(int(face_init['x'])*10,int(face_init['y'])*10),2,(0,255,0),-1)
 
-        expression=xcc['result']['face_list'][0]['expression']
-        # print(expression)
-        # biaoq='wxiao'
-        # if expression['type']=='none':
-        #     biaoq='不笑'
-        # elif expression['type'] == 'laugh':
-        #     biaoq='大笑'
+            expression = xcc['result']['face_list'][0]['expression']
+            out_init='1'
+            biaoq='wxiao'
+            if expression['type']=='none':
+                out_init='0'
+            elif expression['type'] == 'laugh':
+                out_init='2'
 
-        biaoq=expression['type']+':'+str(expression['probability'])
-        img = cv.putText(img,biaoq,(20,40),4, cv.FONT_HERSHEY_PLAIN, (255, 0, 0))
-        cv.imshow('img',img)
-        cv.waitKey(0)
+            out_init+=' '+str(expression['probability'])
+
+            face72=xcc['result']['face_list'][0]['landmark72']
+            for face_init in face72:
+                # cv.circle(img,(int(face_init['x'])*10,int(face_init['y'])*10),2,(0,255,0),-1)
+                out_init+=' '+ str(face_init['x']/img.shape[1])+ ' '+str(face_init['y']/img.shape[0])
+
+
+            # print(expression)
+            # biaoq='wxiao'
+            # if expression['type']=='none':
+            #     biaoq='不笑'
+            # elif expression['type'] == 'laugh':
+            #     biaoq='大笑'
+            text_open=open(img_path[:-4]+'.txt','w')
+            text_open.write(out_init)
+            text_open.close()
+
+            biaoq=expression['type']+':'+str(expression['probability'])
+            # img = cv.putText(img,biaoq,(20,40),4, cv.FONT_HERSHEY_PLAIN, (255, 0, 0))
+            # cv.imshow('img',img)
+            # cv.waitKey(0)

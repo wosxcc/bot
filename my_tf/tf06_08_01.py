@@ -10,14 +10,14 @@ import  cv2 as cv
 
 
 # Training Params
-num_steps = 50000
+num_steps = 100000
 batch_size = 20
 
 # Network Params
 image_dim = 27648 # 28*28 pixels * 1 channel
 gen_hidden_dim = 256
 disc_hidden_dim = 256
-noise_dim = 500 # Noise data points
+noise_dim = 200 # Noise data points
 
 
 
@@ -32,7 +32,7 @@ def get_batch(image, img_W, img_H, batch_size, capacity):
     image_batch = tf.cast(image_batch, tf.float32)
     print(image_batch)
     return image_batch
-path_file = 'D:/pproject/bot/my_tf/gangan'
+path_file = 'E:/xbot/my_tf/gangan'
 img_name=[]
 for filess in  os.listdir(path_file):
     img_name.append(path_file+'/'+filess)
@@ -221,7 +221,7 @@ def gan_train():
             saver.restore(sess,ckpt.model_checkpoint_path)
         for i in range(1, num_steps+1):
             # 生成噪声馈送到生产者
-            for j in range(6):
+            for j in range(5):
                 z = np.random.uniform(-1., 1., size=[batch_size, noise_dim])
                 batch_disc_y = np.concatenate(
                     [np.ones([batch_size]), np.zeros([batch_size])], axis=0)
@@ -233,9 +233,9 @@ def gan_train():
                                         feed_dict=feed_dict)
 
 
-            if i % 100 == 0 or i == 1:
+            if i % 20 == 0 or i == 1:
                 print('Step %i: 产生图像 Loss值: %f, 对比 Loss值: %f' % (i, gl, dl))
-            if i % 500 == 0 or i == num_steps:
+            if i % 100 == 0 or i == num_steps:
                 checkpoint_path = os.path.join(updata_gan,'model.ckpt')
                 saver.save(sess,checkpoint_path,global_step=i)
 
@@ -271,14 +271,22 @@ def gangangan():
             f, a = plt.subplots(5, 10, figsize=(10, 5))
             for i in range(10):
                 # Noise input.
-                z = np.random.uniform(-1., 1., size=[4, noise_dim])
-                g = sess.run(gen_sample, feed_dict={noise_input: z})
-                for j in range(4):
+                z = np.random.uniform(-1., 1., size=[5, noise_dim])
+                images = sess.run(gen_sample, feed_dict={noise_input: z})
+                # print(images)
+                for j in range(5):
                     # 从噪声中生成图像。扩展到Matlab图形的3个通道。
-                    img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
-                                     newshape=(96, 96, 3))
-                    a[j][i].imshow(img)
+                    image = images[j,:,:,:]
+                    image += 1
+                    image *=127.5
+                    image = np.clip(image,0,255).astype(np.uint8)
+                    image =np.reshape(image,(96, 96, -1))
+                    cv.imshow(str(i)+str(j),image)
+                    # img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
+                    #                  newshape=(96, 96, 3))
+                    a[j][i].imshow(image)
             f.show()
             plt.draw()
             plt.show()
-gan_train()
+gangangan()
+# gan_train()
