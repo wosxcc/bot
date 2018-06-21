@@ -253,11 +253,9 @@ def gan_train():
                 img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
                                  newshape=(96, 96, 3))
                 a[j][i].imshow(img)
-
         f.show()
         plt.draw()
         plt.waitforbuttonpress(20)
-
 
 def gangangan():
     updata_gan = './gan/log'

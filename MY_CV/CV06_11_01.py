@@ -39,6 +39,7 @@ if __name__ == '__main__':
     # bbox = (287, 23, 86, 320)  ##坐标宽高
     print(bbox)
     # Initialize tracker with first frame and bounding box
+    bbox=[(287, 23, 86, 320), (200, 200, 60, 60)]
     ok = tracker.init(frame, bbox)
     while True:
         # Read a new frame

@@ -4,8 +4,6 @@ import numpy as np
 import  sys
 
 (major_ver, minor_ver, subminor_ver)=(cv.__version__).split('.') ##获取版本信息
-print(minor_ver)
-print(cv.__version__)
 
 tracker_types = ['BOOSTING', 'MIL', 'KCF', 'TLD', 'MEDIANFLOW']
 tracker_type = tracker_types[2]
@@ -24,7 +22,7 @@ if  int(minor_ver)>=3 and int(major_ver)>2:
         tracker=cv.TrackerMEDIANFLOW_create()
 
 video= cv.VideoCapture('D:/pproject/ppop/image/2.mp4')
-bbox = (287, 23, 86, 320)
+bbox = [(287, 23, 86, 320),(200,200,60,60)]
 print(bbox)
 while True:
     res, img = video.read()
