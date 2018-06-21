@@ -88,6 +88,6 @@ def pretty_print_poem(poem_):
             print(s + '。')
 
 if __name__ == '__main__':
-    begin_char = input('天')## please input the first character:
+    begin_char = input('请输入第一个字：')## 输入古诗的第一个句子:
     poem = gen_poem(begin_char)
     pretty_print_poem(poem_=poem)

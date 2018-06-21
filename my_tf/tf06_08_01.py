@@ -281,7 +281,7 @@ def gangangan():
                     image *=127.5
                     image = np.clip(image,0,255).astype(np.uint8)
                     image =np.reshape(image,(96, 96, -1))
-                    cv.imshow(str(i)+str(j),image)
+                    # cv.imshow(str(i)+str(j),image)
                     # img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
                     #                  newshape=(96, 96, 3))
                     a[j][i].imshow(image)

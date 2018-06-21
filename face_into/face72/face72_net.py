@@ -281,8 +281,8 @@ def val(test_file):
             return prediction
 
 file_path = '../face68/image_test'
-file_path ='E:/face68/trainb'
-file_path ='E:/face72/trainb'
+# file_path ='E:/face68/trainb'
+# file_path ='E:/face72/trainb'
 # file_path ='E:/face68/trainb'
 for file in os.listdir(file_path):
     img_path = file_path + '/' + file
