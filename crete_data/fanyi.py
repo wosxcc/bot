@@ -6,7 +6,7 @@ import urllib
 import random
 import cv2 as cv
 import numpy as np
-from PIL import ImageGrab
+from PIL import ImageGrab, Image, ImageDraw, ImageFont
 from win32api import GetSystemMetrics
 import  os
 
@@ -33,8 +33,7 @@ httpClient = None
 myurl = 'http://api.fanyi.baidu.com/api/trans/vip/translate'
 fromLang = 'auto'
 toLang = 'zh'
-salt = random.randint(32768, 65536)
-# salt = 'My God, have you eaten'
+
 from aip import AipOcr
 import base64
 import  cv2 as cv
@@ -48,6 +47,7 @@ def get_file_content(filePath):
         return fp.read()
 
 def fanyi_img(img_path):
+    salt = random.randint(32768, 65536)
     myurl = 'http://api.fanyi.baidu.com/api/trans/vip/translate'
     imgss = get_file_content(img_path)
     img_txt = client.general(imgss)
@@ -71,8 +71,21 @@ def fanyi_img(img_path):
         zwen = xxx.split('dst')[1][3:-4]
         print(count, zwen.encode("utf-8").decode('unicode_escape'))
         en_txt += txt_line['words']
-        img = cv.putText(img, str(count), (int(txt_line['location']['left']), int(txt_line['location']['top'] + 20)),
-                         cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+        print(txt_line['location'])
+        img_PIL = Image.fromarray(cv.cvtColor(img, cv.COLOR_BGR2RGB))
+        ##打印文字
+        ssscc = zwen.encode("utf-8").decode('unicode_escape')
+        font = ImageFont.truetype("simhei.ttf", int(txt_line['location']['height']), encoding="utf-8")  ##第二个为字体大小
+        # 字体颜色
+        fillColor = (255, 0, 0)
+        # 文字输出位置
+        position = (int(txt_line['location']['left']), int(txt_line['location']['top'])+int(txt_line['location']['height']))
+        draw = ImageDraw.Draw(img_PIL)
+        draw.text(position, ssscc, font=font, fill=fillColor)
+
+        img=cv.cvtColor(np.asarray(img_PIL), cv.COLOR_RGB2BGR)
+        # img = cv.putText(img, str(count), (int(txt_line['location']['left']), int(txt_line['location']['top'] + 20)),
+        #                  cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
         count += 1
     print(en_txt)
     q = en_txt
