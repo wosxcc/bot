@@ -7,7 +7,7 @@ from PIL import Image
 import scipy.misc as misc
 
 # 读取全部.jpg结尾的文件名
-CELEBA_DATE_DIR = 'img_align_celeba'
+CELEBA_DATE_DIR = 'D:/pproject/bot/my_tf/gangan'
 train_images = []
 for image_filename in os.listdir(CELEBA_DATE_DIR):
     if image_filename.endswith('.jpg'):
@@ -17,9 +17,9 @@ for image_filename in os.listdir(CELEBA_DATE_DIR):
 random.shuffle(train_images)
 
 # 设置训练图片数据，包含批大小以及尺寸
-batch_size = 64
+batch_size = 20
 num_batch = len(train_images) // batch_size
-IMAGE_SIZE = 64
+IMAGE_SIZE = 96
 IMAGE_CHANNEL = 3
 
 
@@ -40,7 +40,7 @@ def get_next_batch(pointer):
 
 
 # 噪声接受
-z_dim = 100
+z_dim = 200
 noise = tf.placeholder(tf.float32, [None, z_dim], name='noise')
 # 训练数据接收
 X = tf.placeholder(tf.float32, [batch_size, IMAGE_SIZE, IMAGE_SIZE, IMAGE_CHANNEL], name='X')
@@ -244,14 +244,14 @@ _, fake_decoded = discriminator(fake_image)
 fake_loss = tf.sqrt(2 * tf.nn.l2_loss(fake_decoded - fake_image)) / batch_size
 
 # loss
-# D_loss = real_loss + tf.maximum(1 - fake_loss, 0)
-margin = 20
-D_loss = margin - fake_loss + real_loss
+D_loss = real_loss + tf.maximum(1 - fake_loss, 0)
+# margin = 20
+# D_loss = margin - fake_loss + real_loss
 G_loss = fake_loss  # no pt
 
 
 def optimizer(loss, d_or_g):
-    optim = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.5)
+    optim = tf.train.AdamOptimizer(learning_rate=0.00001, beta1=0.5)
     # print([v.name for v in tf.trainable_variables() if v.name.startswith(d_or_g)])
     var_list = [v for v in tf.trainable_variables() if v.name.startswith(d_or_g)]
     gradient = optim.compute_gradients(loss, var_list=var_list)
@@ -261,44 +261,50 @@ def optimizer(loss, d_or_g):
 train_op_G = optimizer(G_loss, 'Generator')
 train_op_D = optimizer(D_loss, 'Discriminator')
 with tf.Session() as sess:
+    updata_gan = './gan/log2'
+    train_write = tf.summary.FileWriter(updata_gan, sess.graph)
+    saver = tf.train.Saver()
+
     sess.run(tf.global_variables_initializer(), feed_dict={train_phase: True})
     saver = tf.train.Saver()
 
     # 恢复前一次训练
-    ckpt = tf.train.get_checkpoint_state('.')
-    if ckpt != None:
-        print(ckpt.model_checkpoint_path)
+    ckpt = tf.train.get_checkpoint_state(updata_gan)
+    if ckpt and ckpt.model_checkpoint_path:
+        global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
         saver.restore(sess, ckpt.model_checkpoint_path)
     else:
         print("没找到模型")
 
     step = 0
-    for i in range(40):
-        for j in range(num_batch):
+    for i in range(4001):
+        for j in range(5):
             batch_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, z_dim]).astype(np.float32)
 
             d_loss, _ = sess.run([D_loss, train_op_D],
                                  feed_dict={noise: batch_noise, X: get_next_batch(j), train_phase: True})
             g_loss, _ = sess.run([G_loss, train_op_G],
                                  feed_dict={noise: batch_noise, X: get_next_batch(j), train_phase: True})
-            g_loss, _ = sess.run([G_loss, train_op_G],
-                                 feed_dict={noise: batch_noise, X: get_next_batch(j), train_phase: True})
+            # g_loss, _ = sess.run([G_loss, train_op_G],
+            #                      feed_dict={noise: batch_noise, X: get_next_batch(j), train_phase: True})
 
-            print(step, d_loss, g_loss)
+            print('次数：',step, '生成loss',d_loss,'判别loss', g_loss)
 
             # 保存模型并生成图像
-            if step % 100 == 0:
-                saver.save(sess, "celeba.model", global_step=step)
+            if (step) % 100 == 0 and d_loss>0:
+                checkpoint_path = os.path.join(updata_gan, 'model.ckpt')
+                saver.save(sess, checkpoint_path, global_step=i)
+                # saver.save(sess, "celeba.model", global_step=step)
 
-                test_noise = np.random.uniform(-1.0, 1.0, size=(5, z_dim)).astype(np.float32)
+                test_noise = np.random.uniform(-1.0, 1.0, size=(10, z_dim)).astype(np.float32)
                 images = sess.run(fake_image, feed_dict={noise: test_noise, train_phase: False})
-
-                for k in range(5):
+            if (step) % 500 == 0 and d_loss > 0:
+                for k in range(10):
                     image = images[k, :, :, :]
                     image += 1
                     image *= 127.5
                     image = np.clip(image, 0, 255).astype(np.uint8)
                     image = np.reshape(image, (IMAGE_SIZE, IMAGE_SIZE, -1))
-                    misc.imsave('fake_image' + str(step) + str(k) + '.jpg', image)
+                    misc.imsave('./gan/image/img' + str(step) + str(k) + '.jpg', image)
 
             step += 1
