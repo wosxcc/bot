@@ -4,6 +4,7 @@ import  http.client as httplib
 import hashlib
 import urllib
 import random
+import os
 import cv2 as cv
 import numpy as np
 from PIL import ImageGrab, Image, ImageDraw, ImageFont
@@ -103,6 +104,10 @@ def fanyi_img(img_path):
     xxx = sssread.decode()
     zwen = xxx.split('dst')[1][3:-4]
     print(zwen.encode("utf-8").decode('unicode_escape'))
+
+    if os.path.exists(img_path):
+        # 删除文件，可使用以下两种方法。
+        os.remove(img_path)
     cv.imshow('img', img)
     cv.waitKey()
 
@@ -195,4 +200,5 @@ while(1):
         sum_init=[]
     elif k==32:  # 空格跳到下一帧
         break
+
 cv.destroyAllWindows()
