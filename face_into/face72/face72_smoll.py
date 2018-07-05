@@ -3,7 +3,7 @@ import cv2 as cv
 import numpy as np
 import tensorflow as tf
 import datetime
-
+from tensorflow.python.framework import graph_util
 
 label_lines = []
 image_lines = []
@@ -197,6 +197,14 @@ def run_training(txt_name):
             _, tra_loss = sess.run([train_op, rmse])
             if step % 50 == 0:
                 print('Step %d,train loss = %.5f' % (step, tra_loss))
+                constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ['softmax_linear/softmax_linear'])
+                print('Step %d,train loss = %.5f' % (step, tra_loss))
+                with tf.gfile.FastGFile(logs_train_dir + 'model1.pb', mode='wb') as f:
+                    f.write(constant_graph.SerializeToString())
+
+
+                print('Step %d,train loss = %.5f' % (step, tra_loss))
+
                 # 每迭代50次，打印出一次结果
                 summary_str = sess.run(summary_op)
                 train_writer.add_summary(summary_str, step)
@@ -225,7 +233,7 @@ CAPACITY = 64
 MAX_STEP = 1000000
 learning_rate = 0.00001
 N_CLASSES = 30
-# run_training(txt_name)
+run_training(txt_name)
 
 
 

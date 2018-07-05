@@ -1,2 +1,3 @@
+# -*- coding: utf-8 -*-
 import  sys
-print(sys.argv[0])
+print('123456')

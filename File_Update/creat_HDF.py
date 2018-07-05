@@ -3,19 +3,21 @@ import cv2 as cv
 import numpy as np
 import random
 
-img_bian=80
+img_bian=128
 
+test_count=641
 file_yuan=open('trainc.txt')
 get=file_yuan.read()
 result=get.split('\n')
 other_result=get.splitlines()
-img_data=np.zeros((len(other_result),3,img_bian,img_bian))
-lab_data=np.zeros((len(other_result),1))
-freq_data=np.zeros((len(other_result),28))
-f = h5py.File('HDF28_train.h5','w')
+img_data=np.zeros((len(other_result)-test_count,3,img_bian,img_bian))
+lab_data=np.zeros((len(other_result)-test_count,1))
+freq_data=np.zeros((len(other_result)-test_count,28))
+f = h5py.File('HDFxcc_train.h5','w')
 
 random.shuffle(other_result)
-for i in  range(len(other_result)):
+for i in  range(len(other_result)-test_count):
+    # i+=641
     data_list = other_result[i].split(' ')
     # print(data_list)
     if len(data_list) > 3:
@@ -24,18 +26,26 @@ for i in  range(len(other_result)):
             img=cv.resize(img,None,fx=float(img_bian/img.shape[1]),fy=float(img_bian/img.shape[1]), interpolation=cv.INTER_CUBIC)
         imgxx=img.astype(np.float32)/256.0
 
-        lables=float(data_list[1])
+        lables=min(float(data_list[1]),1)
         freq=[]
 
         # freq.append(float(data_list[1]))
         # freq.append(float(data_list[2]))
         for x in range(14):
             freq.append(float(data_list[117 + 2 + x * 2]))
+        for x in range(14):
             freq.append(float(data_list[117 + 2 + x * 2 + 1]))
+
+
+            # cv.circle(img,(int(float(data_list[117 + 2 + x * 2])*128),int(float(data_list[117 + 2 + x * 2+1])*128)),2,(0, 255, 255), -1)
+
+
 
         # freq=[float(data_list[2]), float(data_list[3]), float(data_list[4]), float(data_list[5])]
         imgxx = imgxx[:, :, [2, 1, 0]]
+        # print(imgxx.shape)
         imgxx = imgxx.transpose((2, 0, 1))
+        # print(imgxx.shape)
         print('第{}张图片'.format(i),imgxx.shape)
         img_data[i]=imgxx
         lab_data[i]=lables

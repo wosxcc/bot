@@ -1,0 +1,40 @@
+{
+    "model" : {
+        "min_input_size":       192,
+        "max_input_size":       192,
+        "anchors":              [5,7,  8,15,  16,12,  15,30,  31,23,  30,60,  58,45,  78,99,  183,159],
+        "labels":               ["raccoon"]
+    },
+
+    "train": {
+        "train_image_folder":   "C:\\Users\\new\\Desktop\\raccoon_dataset-master\\images\\",
+        "train_annot_folder":   "C:\\Users\\new\\Desktop\\raccoon_dataset-master\\annotations\\",
+        "cache_name":           "raccoon_train.pkl",
+
+        "train_times":          1,
+        "batch_size":           32,
+        "learning_rate":        1e-4,
+        "nb_epochs":            100,
+        "warmup_epochs":        3,
+        "ignore_thresh":        0.5,
+        "gpus":                 "0,1",
+
+        "grid_scales":          [1,1,1],
+        "obj_scale":            5,
+        "noobj_scale":          1,
+        "xywh_scale":           1,
+        "class_scale":          1,
+
+        "tensorboard_dir":      "log_raccoon",
+        "saved_weights_name":   "face.h5",
+        "debug":                true
+    },
+
+    "valid": {
+        "valid_image_folder":   "",
+        "valid_annot_folder":   "",
+        "cache_name":           "",
+
+        "valid_times":          1
+    }
+}

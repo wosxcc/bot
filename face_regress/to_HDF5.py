@@ -32,8 +32,9 @@ for i in  range(len(other_result)):
     img_data[i]=imgxx
     lab_data[i]=lables
     freq_data[i]=freq
-    # cv.imshow('img',img)
-    # cv.waitKey()
+    print(lables)
+    cv.imshow('img',img)
+    cv.waitKey()
 
 f['data']=img_data #这个地方的名字决定了你使用caffe时候top的名称，名称没对应上是错误的。
 f['label']=lab_data #同上面
