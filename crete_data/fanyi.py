@@ -94,14 +94,18 @@ if __name__ == "__main__":
         httpClient = httplib.HTTPConnection('api.fanyi.baidu.com')
         httpClient.request('GET', myurl)
 
-        # response是HTTPResponse对象
-        response = httpClient.getresponse()
-        sssread = response.read()
-        xxx = sssread.decode()
-        zwen = xxx.split('dst')[1][3:-4]
-        print(zwen.encode("utf-8").decode('unicode_escape'))
-        cv.imshow('img', img)
-        cv.waitKey()
+    # response是HTTPResponse对象
+    response = httpClient.getresponse()
+    sssread = response.read()
+    xxx = sssread.decode()
+    zwen = xxx.split('dst')[1][3:-4]
+    print(zwen.encode("utf-8").decode('unicode_escape'))
+
+    if os.path.exists(img_path):
+        # 删除文件，可使用以下两种方法。
+        os.remove(img_path)
+    cv.imshow('img', img)
+    cv.waitKey()
 
 
 
@@ -159,37 +163,38 @@ if __name__ == "__main__":
 
     # keep_num=
 
-    bbox = (0, 0,  GetSystemMetrics (0), GetSystemMetrics (1))   #####(sx,sy,ex,ey)
-    im = ImageGrab.grab(bbox)   ###获取屏幕图像
-    # im.save('as.jpg')
-    img = np.array(im)       ###转化为array数组
-    img =cv.cvtColor(img,cv.COLOR_BGR2RGB)
-    # img=cv.resize(img,(1400,1000), interpolation=cv.INTER_CUBIC)
-    img_copy = np.copy(img)
-    # if count_c%3==0:
-    cv.namedWindow(windows_name)
-    cv.setMouseCallback(windows_name,draw_circle)
-    sum_init = []
-    mode = True
-    while(1):
+bbox = (0, 0,  GetSystemMetrics (0), GetSystemMetrics (1))   #####(sx,sy,ex,ey)
+im = ImageGrab.grab(bbox)   ###获取屏幕图像
+# im.save('as.jpg')
+img = np.array(im)       ###转化为array数组
+img =cv.cvtColor(img,cv.COLOR_BGR2RGB)
+# img=cv.resize(img,(1400,1000), interpolation=cv.INTER_CUBIC)
+img_copy = np.copy(img)
+# if count_c%3==0:
+cv.namedWindow(windows_name)
+cv.setMouseCallback(windows_name,draw_circle)
+sum_init = []
+mode = True
+while(1):
+    cv.imshow(windows_name, img_copy)
+    k=cv.waitKey(0)&0xFF
+    if k==ord('c'): # c转换类型
+        print('转换成功')
+        mode=not mode
         cv.imshow(windows_name, img_copy)
-        k=cv.waitKey(0)&0xFF
-        if k==ord('c'): # c转换类型
-            print('转换成功')
-            mode=not mode
-            cv.imshow(windows_name, img_copy)
-        elif k==ord('s'):       # s保存
-            if len(sum_init)>0:
-                for bbox in sum_init:
-                    bboxss = [int(xx) for xx in bbox]
-                    imgwrite_name ='ls.jpg'
-                    # cv.imshow('xximg',img[int(bboxss[2]-bboxss[4]/2):int(bboxss[2]+bboxss[4]/2),int(bboxss[1]-bboxss[3]/2):int(bboxss[1]+bboxss[3]/2),:])
-                    cv.imwrite(imgwrite_name,img[int(bboxss[2]-bboxss[4]/2):int(bboxss[2]+bboxss[4]/2),int(bboxss[1]-bboxss[3]/2):int(bboxss[1]+bboxss[3]/2),:])
-                    fanyi_img(imgwrite_name)
-                break
-        elif k == ord('d'):             # 清屏
-            img_copy = np.copy(img)
-            sum_init=[]
-        elif k==32:  # 空格跳到下一帧
+    elif k==ord('s'):       # s保存
+        if len(sum_init)>0:
+            for bbox in sum_init:
+                bboxss = [int(xx) for xx in bbox]
+                imgwrite_name ='ls.jpg'
+                # cv.imshow('xximg',img[int(bboxss[2]-bboxss[4]/2):int(bboxss[2]+bboxss[4]/2),int(bboxss[1]-bboxss[3]/2):int(bboxss[1]+bboxss[3]/2),:])
+                cv.imwrite(imgwrite_name,img[int(bboxss[2]-bboxss[4]/2):int(bboxss[2]+bboxss[4]/2),int(bboxss[1]-bboxss[3]/2):int(bboxss[1]+bboxss[3]/2),:])
+                fanyi_img(imgwrite_name)
             break
-    cv.destroyAllWindows()
+    elif k == ord('d'):             # 清屏
+        img_copy = np.copy(img)
+        sum_init=[]
+    elif k==32:  # 空格跳到下一帧
+        break
+
+cv.destroyAllWindows()
