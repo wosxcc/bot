@@ -14,8 +14,10 @@ rex,rey=-1,-1           # 初始化位置
 class0='hand'
 class1='face'
 
+IMG_W = 416
+IMG_H = 256
 
-windows_name='F:/person1.mp4'   # 视频文件位置
+windows_name='C:/Users/Administrator.WIN-B3TBS2DH9MJ/Desktop/行人检测/person4.mp4'   # 视频文件位置
 cap=cv.VideoCapture(windows_name)
 path='./train/'                                     # 文件保存位置
 img_copy=[]
@@ -73,7 +75,7 @@ def draw_circle(event,x,y,flags,param):
                              (int(mx + xwidth / 2), int(my + yheight / 2)), (255, 0, 255), 1)
             drawing=False
 count_c=0
-keep_num=int(len(os.listdir(path[0:-1]))/2)+81002
+keep_num=int(len(os.listdir(path[0:-1]))/2)+81003
 # keep_num=
 while(1):
     ret, img = cap.read()
@@ -98,7 +100,8 @@ while(1):
                 creat_name=str(keep_num)
                 for i in range(int(5-len(creat_name))):
                     creat_name='0'+creat_name
-                cv.imwrite(path+creat_name+'.jpg',img)
+                imgs =cv.resize(img, (IMG_W,IMG_H), interpolation=cv.INTER_CUBIC)
+                cv.imwrite(path+creat_name+'.jpg',imgs)
                 write_txt = open(path+creat_name+'.txt', 'w')
                 output_txt=''
                 for bbox in sum_init:

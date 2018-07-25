@@ -13,10 +13,11 @@ rex,rey=-1,-1           # 初始化位置
 
 class0='hand'
 class1='face'
+IMG_W = 480
+IMG_H = 480
 
-
-windows_name='E:/xbot/pachong/car'   # 文件位置
-path='./car_id/'                                     # 文件保存位置
+windows_name='E:/2018-07-23'   # 文件位置
+path='./train_person/'                                     # 文件保存位置
 img_copy=[]
 sum_init=[]
 
@@ -72,13 +73,15 @@ def draw_circle(event,x,y,flags,param):
                              (int(mx + xwidth / 2), int(my + yheight / 2)), (255, 0, 255), )
             drawing=False
 count_c=0
-keep_num=int(len(os.listdir(path[0:-1]))/2)+10000
+keep_num=int(len(os.listdir(path[0:-1]))/2)+10001
 # keep_num=
 for file in os.listdir(windows_name):
-    if file[-4:]=='.jpg':
+    if file[-6:]=='o.jpeg':
         print(windows_name+'/'+file)
         img = cv.imread(windows_name+'/'+file)
-        img=cv.resize(img,(1400,1000), interpolation=cv.INTER_CUBIC)
+        img=cv.resize(img,(1000,600), interpolation=cv.INTER_CUBIC)
+        imga = cv.imread(windows_name+'/'+file[:-6]+'a.jpeg')
+        cv.imshow('image_a',imga)
         img_copy = np.copy(img)
         count_c+=1
         # if count_c%3==0:
@@ -98,7 +101,8 @@ for file in os.listdir(windows_name):
                     creat_name=str(keep_num)
                     for i in range(int(5-len(creat_name))):
                         creat_name='0'+creat_name
-                    cv.imwrite(path+creat_name+'.jpg',img)
+                    imgs = cv.resize(img, (IMG_W, IMG_H), interpolation=cv.INTER_CUBIC)
+                    cv.imwrite(path+creat_name+'.jpg',imgs)
                     write_txt = open(path+creat_name+'.txt', 'w')
                     output_txt=''
                     for bbox in sum_init:

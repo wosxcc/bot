@@ -144,7 +144,7 @@ def stack_blocks_dense(net, blocks, outputs_collections = None):
                                         depth_bottleneck=unit_depth_bottleneck,
                                     stride = unit_stride)
                     net = slim.utils.collect_named_outputs(outputs_collections, sc.name, net)
-
+    print('这里的net是：',net)
     return net
 
 
@@ -195,28 +195,26 @@ def bottleneck(inputs, depth, depth_bottleneck, stride, outputs_collections = No
 
 
 def resnet_v2(inputs, blocks, BATCH_SIZE, num_classes = None, global_pool = True, include_root_block = True, reuse = None, scope = None):
-    print('inputs, blocks, BATCH_SIZE',inputs, blocks, BATCH_SIZE)
+    # print('inputs, blocks, BATCH_SIZE',inputs, blocks, BATCH_SIZE)
+
     with tf.variable_scope(scope, 'resnet_v2', [inputs], reuse = reuse) as sc:
         end_points_collection = sc.original_name_scope + '_end_points'
         with slim.arg_scope([slim.conv2d, bottleneck, stack_blocks_dense], outputs_collections = end_points_collection):
             net = inputs
-
         if include_root_block:
             with slim.arg_scope([slim.conv2d], activation_fn = None, normalizer_fn = None):
                 net = conv2d_same(net, 64, 7, stride = 2, scope = 'conv1')
             net = slim.max_pool2d(net, [3, 3], stride = 2, scope = 'pool1')
         net = stack_blocks_dense(net, blocks)
         net = slim.batch_norm(net, activation_fn = tf.nn.relu, scope = 'postnorm')
-
         if global_pool:
             net = tf.reduce_mean(net, [1, 2], name = 'pool5', keep_dims = True)
-
         if num_classes is not None:
             net = slim.conv2d(net, num_classes, [1, 1], activation_fn = None, normalizer_fn = None, scope = 'logits')
             end_points = slim.utils.convert_collection_to_dict(end_points_collection)
-
             if num_classes is not None:
                 end_points['predictions'] = slim.softmax(net, scope = 'predictions')
+            print(end_points['predictions'])
             print('net',net)
             net = tf.reshape(net, shape=[BATCH_SIZE, -1])
             return net, end_points
@@ -225,12 +223,12 @@ def resnet_v2(inputs, blocks, BATCH_SIZE, num_classes = None, global_pool = True
 
 def resnet_v2_50(inputs,BATCH_SIZE, num_classes = None, global_pool = True, reuse = None, scope = 'resnet_v2_50'):
 
-    print(num_classes, global_pool, reuse)
+
     blocks = [
-        Block('block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
-        Block('block2', bottleneck, [(512, 128, 1)] * 3 + [(512, 128, 2)]),
-        Block('block3', bottleneck, [(1024, 256, 1)] * 5 + [(1024, 256, 2)]),
-        Block('block4', bottleneck, [(2048, 1024, 1)] * 3)]
+        Block('block1', bottleneck, [(128, 32, 1)] * 2 + [(128, 32, 2)]),
+        Block('block2', bottleneck, [(256, 64, 1)] * 3 + [(256, 64, 2)]),
+        Block('block3', bottleneck, [(512, 128, 1)] * 5 + [(512, 128, 2)]),
+        Block('block4', bottleneck, [(1024, 512, 1)] * 3)]
     return resnet_v2(inputs, blocks,BATCH_SIZE, num_classes, global_pool, include_root_block = True, reuse = reuse, scope = scope)
 
 
@@ -283,13 +281,12 @@ def evaluation(logits, labels):
     return accuracy
 
 def train_resnet():
-    logs_train_dir = './resnet/log/'
+    logs_train_dir = './resnet/log2/'
     train, train_label = get_files('E:/BaiduNetdiskDownload/Dogs vs Cats Redux Kernels Edition', 0.2)
 
     train_batch, train_label_batch = get_batch(train, train_label, IMG_W, IMG_H, BATCH_SIZE,
                                                CAPACITY)
-    print(train_batch, train_label_batch)
-    net, end_points = resnet_v2_50(train_batch, N_CLASSES)
+    net, end_points = resnet_v2_50(train_batch,BATCH_SIZE, num_classes=N_CLASSES)
     train_loss=losses(net, train_label_batch)
     train_op=trainning(train_loss, learning_rate)
     train_acc = evaluation(net, train_label_batch)
@@ -365,8 +362,8 @@ def get_one_image(img_dir):
     return image_arr
 
 
-def test(test_file):
-    log_dir = './resnet/log/'
+def xtval(test_file):
+    log_dir = './resnet/log2/'
     # image_arr=test_file
     image_arr = get_one_image(test_file)
     with tf.Graph().as_default():
@@ -407,13 +404,12 @@ CAPACITY = 64
 MAX_STEP = 10000
 # train_resnet()
 
-pathsss='D:/pproject/ppop/img_test'
+pathsss='E:/BaiduNetdiskDownload/Dogs vs Cats Redux Kernels Edition/test'
 for test_file in os.listdir(pathsss):
 
-    print(pathsss+'/'+test_file)
 
     xtime=datetime.now()
-    prediction = test(pathsss + '/' + test_file)
+    prediction = xtval(pathsss + '/' + test_file)
     print('耗时:',datetime.now()-xtime)
     max_index = np.argmax(prediction)
     img =cv.imread(pathsss+'/'+test_file)

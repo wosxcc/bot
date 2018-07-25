@@ -27,6 +27,8 @@ def read_img(txt_name):
                 xlabel.append(line_list[117 + 2 + x * 2])
                 xlabel.append(line_list[117 + 2 + x * 2 + 1])
             label_lines.append(xlabel)
+            # label_lines.append(line_list[1:])
+
 
     label_linesc=[[float(i) for i in xline] for xline in label_lines]
     ximage_lines=np.array(image_lines, dtype='float32')
@@ -75,24 +77,39 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
         relu4 = tf.nn.relu(tf.nn.bias_add(conv4, b4), name='relu4')
 
 
+    with tf.variable_scope('conv5') as scope:
+        W5 = weight_variable([3, 3, 256, 128])
+        b5 = bias_variable([128])
+        conv5 = tf.nn.conv2d(relu4, W5, strides=[1, 1, 1, 1], padding='SAME')
+        relu5 = tf.nn.relu(tf.nn.bias_add(conv5, b5), name='relu5')
+
+
+    # with tf.variable_scope('conv6') as scope:
+    #     W6 = weight_variable([3, 3, 512, 256])
+    #     b6 = bias_variable([256])
+    #     conv6 = tf.nn.conv2d(relu5, W6, strides=[1, 2, 2, 1], padding='SAME')
+    #     relu6 = tf.nn.relu(tf.nn.bias_add(conv6, b6), name='relu6')
+
     with tf.variable_scope('conv7') as scope:
-        W7 = weight_variable([3, 3, 256, 128])
-        b7= bias_variable([128])
-        conv7 = tf.nn.conv2d(relu4, W7, strides=[1, 2, 2, 1], padding='SAME')
+        W7 = weight_variable([3, 3, 128, 256])
+        b7= bias_variable([256])
+        conv7 = tf.nn.conv2d(relu5, W7, strides=[1, 1, 1, 1], padding='SAME')
         relu7 = tf.nn.relu(tf.nn.bias_add(conv7, b7), name='relu7')
+
 
         # 全连接层
     with tf.variable_scope("fc1") as scope:
 
         dim = int(np.prod(relu7.get_shape()[1:]))
         reshape = tf.reshape(relu7, [-1, dim])
-        weights =weight_variable([dim, 256])
-        biases = bias_variable([256])
-        fc1 = tf.nn.relu(tf.matmul(reshape, weights) + biases, name="fc1")
+        weights1 =weight_variable([dim, 240])
+        biases1 = bias_variable([240])
+        fc1 = tf.nn.relu(tf.matmul(reshape, weights1) + biases1, name="fc1")
+
     with tf.variable_scope("output") as scope:
-        weights = weight_variable([256, n_classes])
-        biases = bias_variable([n_classes])
-        y_conv = tf.add(tf.matmul(fc1, weights), biases, name="output")
+        weights2 = weight_variable([240, n_classes])
+        biases2 = bias_variable([n_classes])
+        y_conv = tf.add(tf.matmul(fc1, weights2), biases2, name="output")
     rmse = tf.sqrt(tf.reduce_mean(tf.square( y - y_conv)))
 
     with tf.name_scope("optimizer"):
@@ -109,7 +126,7 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
 
 
 def run_training(txt_name):
-    logs_train_dir = './face72/facepb/'
+    logs_train_dir = './face72/facepb30/'
     X_data, Y_data = read_img(txt_name)
     graph= face_net(BATCH_SIZE, IMG_H,IMG_W, N_CLASSES,learning_rate)
     # summary_op = tf.summary.merge_all()
@@ -124,11 +141,13 @@ def run_training(txt_name):
 
     for step in np.arange(MAX_STEP):
         for i in range(BATCH_SIZE):
-            xb= (step%166)*64+i
+            xb= (step%332)*32+i
             # ximage=np.array(X_data[xb]*255, dtype='uint8')
+            # for xxi in range(72):
+            #     cv.circle(ximage,(int(Y_data[xb][2+2*xxi]*96),int(Y_data[xb][2+2*xxi+1]*96)),2,(0, 255, 255), -1)
             # cv.imshow('ximage',ximage)
             # cv.waitKey()
-            #
+
             _ ,tra_loss= sess.run([graph['optimize'],graph['cost']],feed_dict={
                         graph['x']: np.reshape(X_data[xb], (1, 96, 96, 3)),
                         graph['y']: np.reshape(Y_data[xb], (1, 30))})
@@ -142,7 +161,7 @@ def run_training(txt_name):
             print('Step %d,train loss = %.5f' % (step, tra_loss))
             constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
                                                                        ['output/output'])
-            with tf.gfile.FastGFile(logs_train_dir + 'model1.pb', mode='wb') as f:
+            with tf.gfile.FastGFile(logs_train_dir + 'face72.pb', mode='wb') as f:
                 f.write(constant_graph.SerializeToString())
 
 
@@ -161,20 +180,20 @@ txt_name= 'trains.txt'
 IMG_W = 96
 IMG_H = 96
 
-BATCH_SIZE = 64
-CAPACITY = 64
-MAX_STEP = 166000
-learning_rate = 0.0001
+BATCH_SIZE = 32
+CAPACITY = 32
+MAX_STEP = 332000
+learning_rate = 0.0000001
 N_CLASSES = 30
 run_training(txt_name)
 
 
-
+#
 # def get_one_image(img_dir):
 #     image = cv.imread(img_dir)
 #     # 好像一次只能打开一张图片，不能一次打开一个文件夹，这里大家可以去搜索一下
-#     bei_x = 96 / int(image.shape[1])
-#     bei_y = 96 / int(image.shape[0])
+#     bei_x = IMG_W / int(image.shape[1])
+#     bei_y = IMG_H / int(image.shape[0])
 #     min_bian = min(image.shape[0], image.shape[1])
 #     max_bian = max(image.shape[0], image.shape[1])
 #     image = cv.resize(image, None, fx=bei_x, fy=bei_y, interpolation=cv.INTER_CUBIC)
@@ -184,18 +203,18 @@ run_training(txt_name)
 #
 #
 # def val(test_file):
-#     log_dir = './face72/smoll/'
+#     log_dir = './face72/facepbx/'
 #     # image_arr=test_file
 #     image_arr = get_one_image(test_file)
 #     with tf.Graph().as_default():
 #         image = tf.cast(image_arr, tf.float32)
 #         image = tf.image.per_image_standardization(image)  ###归一化操作
-#         image = tf.reshape(image, [1, 96, 96, 3])
+#         image = tf.reshape(image, [1, IMG_W, IMG_H, 3])
 #         op_intp = np.zeros(N_CLASSES, np.float32)
 #         p, r = face_net(image, op_intp, 1, N_CLASSES)
 #         # print('看看p的值：',p)
 #         logits = p  # tf.nn.softmax(p)
-#         x = tf.placeholder(tf.float32, shape=[96, 96, 3])
+#         x = tf.placeholder(tf.float32, shape=[IMG_W, IMG_H, 3])
 #         saver = tf.train.Saver()
 #         with tf.Session() as sess:
 #             ckpt = tf.train.get_checkpoint_state(log_dir)

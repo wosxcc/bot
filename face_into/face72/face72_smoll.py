@@ -263,7 +263,7 @@ def get_one_image(img_dir):
 
 
 def val(test_file):
-    log_dir = './face72/smoll/'
+    log_dir = 'E:/xbot/face_into/face68/image_test'
     # image_arr=test_file
     image_arr = get_one_image(test_file)
     with tf.Graph().as_default():
