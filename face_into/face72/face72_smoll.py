@@ -7,8 +7,9 @@ from tensorflow.python.framework import graph_util
 
 label_lines = []
 image_lines = []
+keep_prob =0.6
 
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 def read_txt(txt_name):
     txt_open = open(txt_name)
     txt_read = txt_open.read()
@@ -136,25 +137,40 @@ def face_net(images,lab_data,batch_size, n_classes):
         # print('reshape',reshape)
         dim = reshape.get_shape()[1].value
         weights = tf.get_variable("weights",
-                                  shape=[dim, 256],
+                                  shape=[dim, 1024],
                                   dtype=tf.float32,
                                   initializer=tf.truncated_normal_initializer(stddev=0.005, dtype=tf.float32))
         biases = tf.get_variable("biases",
-                                 shape=[256],
+                                 shape=[1024],
                                  dtype=tf.float32,
                                  initializer=tf.constant_initializer(0.1))
-        fc1 = tf.nn.relu(tf.matmul(reshape, weights) + biases, name="fc1")
+        fc1 = tf.nn.dropout(tf.nn.relu(tf.matmul(reshape, weights) + biases, name="fc1"),keep_prob=keep_prob)
+        # tf.nn.dropout一般在全连接中，用来设置设计院被选中的概率，防止过拟合
+
+    with tf.variable_scope("fc2") as scope:
+        reshape = tf.reshape(relu7, shape=[batch_size, -1])
+        # print('reshape',reshape)
+        dim2 = reshape.get_shape()[1].value
+        weights2 = tf.get_variable("weights",
+                                  shape=[dim2, 1024],
+                                  dtype=tf.float32,
+                                  initializer=tf.truncated_normal_initializer(stddev=0.005, dtype=tf.float32))
+        biases2 = tf.get_variable("biases",
+                                 shape=[1024],
+                                 dtype=tf.float32,
+                                 initializer=tf.constant_initializer(0.1))
+        fc2 =  tf.nn.dropout(tf.nn.relu(tf.matmul(reshape, weights2) + biases2, name="fc2"),keep_prob=keep_prob)
 
     with tf.variable_scope("softmax_linear") as scope:
         weights = tf.get_variable("weights",
-                                  shape=[256, n_classes],
+                                  shape=[1024, n_classes],
                                   dtype=tf.float32,
                                   initializer=tf.truncated_normal_initializer(stddev=0.005, dtype=tf.float32))
         biases = tf.get_variable("biases",
                                  shape=[n_classes],
                                  dtype=tf.float32,
                                  initializer=tf.constant_initializer(0.1))
-        y_conv = tf.add(tf.matmul(fc1, weights), biases, name="softmax_linear")
+        y_conv = tf.add(tf.matmul(fc2, weights), biases, name="softmax_linear")
         rmse = tf.sqrt(tf.reduce_mean(tf.square(lab_data - y_conv)))
     return y_conv, rmse
 
@@ -168,7 +184,7 @@ def trainning(loss, learning_rate):
 
 
 def run_training(txt_name):
-    logs_train_dir = './face72/smoll/'
+    logs_train_dir = './face72/smollB/'
     train, train_into = read_txt(txt_name)
     train_batch, train_into_batch = get_batch(train, train_into,
                                               IMG_W,
@@ -196,9 +212,7 @@ def run_training(txt_name):
                 break
             _, tra_loss = sess.run([train_op, rmse])
             if step % 50 == 0:
-                print('Step %d,train loss = %.5f' % (step, tra_loss))
                 constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ['softmax_linear/softmax_linear'])
-                print('Step %d,train loss = %.5f' % (step, tra_loss))
                 with tf.gfile.FastGFile(logs_train_dir + 'model1.pb', mode='wb') as f:
                     f.write(constant_graph.SerializeToString())
 
@@ -266,7 +280,10 @@ def val(test_file):
     log_dir = 'E:/xbot/face_into/face68/image_test'
     # image_arr=test_file
     image_arr = get_one_image(test_file)
+
     with tf.Graph().as_default():
+
+
         image = tf.cast(image_arr, tf.float32)
         image = tf.image.per_image_standardization(image)  ###归一化操作
         image = tf.reshape(image, [1, 96, 96, 3])
@@ -307,7 +324,7 @@ for file in os.listdir(file_path):
     elif prediction[0][0]>=1.6:
         biaoq = 'Laugh'
     biaoq+=':' + str(prediction[0][1])
-    img = cv.putText(img, biaoq, (0, 30), 2, cv.FONT_HERSHEY_PLAIN, (255, 0, 0))
+    img = cv.putText(img, biaoq, (0, N_CLASSES), 2, cv.FONT_HERSHEY_PLAIN, (255, 0, 0))
     for i in range(int(len(prediction[0]) / 2)-1):
         cv.circle(img, (int(prediction[0][2+i * 2] * img.shape[1]), int(prediction[0][2+i * 2 + 1] * img.shape[0])), 2,
                   (0, 255, 255), -1)

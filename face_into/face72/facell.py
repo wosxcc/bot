@@ -6,7 +6,7 @@ import datetime
 from tensorflow.python.framework import graph_util
 from keras.layers.merge import add,concatenate
 from keras.layers import UpSampling2D
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 label_lines = []
 image_lines = []
 
@@ -118,7 +118,9 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
         weights2 = weight_variable([300, n_classes])
         biases2 = bias_variable([n_classes])
         y_conv = tf.add(tf.matmul(fc1, weights2), biases2, name="output")
-    rmse = tf.sqrt(tf.reduce_mean(tf.square( y - y_conv)))
+
+    rmse = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y))
+    # rmse = tf.sqrt(tf.reduce_mean(tf.square( y - y_conv)))
 
     with tf.variable_scope('costs'):
         cost =tf.reduce_mean(rmse,name='rmse')
@@ -192,8 +194,8 @@ IMG_H = 96
 
 BATCH_SIZE = 16
 CAPACITY = 16
-MAX_STEP = 332000
-learning_rate = 0.0000001
+MAX_STEP = 6000
+learning_rate = 0.0001
 N_CLASSES = 30
 run_training(txt_name)
 

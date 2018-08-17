@@ -16,7 +16,7 @@ class1='face'
 IMG_W = 480
 IMG_H = 480
 
-windows_name='E:/2018-07-23'   # 文件位置
+windows_name='E:/2018-07-21'   # 文件位置
 path='./train_person/'                                     # 文件保存位置
 img_copy=[]
 sum_init=[]
@@ -60,6 +60,7 @@ def draw_circle(event,x,y,flags,param):
         xwidth = abs(rex - x)
         yheight = abs(rey - y)
         if xwidth*yheight>=200:
+            print('输出框的位置宽高', x, y, xwidth, yheight)
             # print('结束时的位置：rex,rey,x,y',mx,my,xwidth,yheight)
             if mode == True:                                # 如果是人类型是0
                 sum_init.append([0,mx,my,xwidth,yheight])
@@ -79,7 +80,7 @@ for file in os.listdir(windows_name):
     if file[-6:]=='o.jpeg':
         print(windows_name+'/'+file)
         img = cv.imread(windows_name+'/'+file)
-        img=cv.resize(img,(1000,600), interpolation=cv.INTER_CUBIC)
+        # img=cv.resize(img,(1000,600), interpolation=cv.INTER_CUBIC)
         imga = cv.imread(windows_name+'/'+file[:-6]+'a.jpeg')
         cv.imshow('image_a',imga)
         img_copy = np.copy(img)

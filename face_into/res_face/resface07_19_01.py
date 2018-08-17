@@ -66,6 +66,7 @@ def conv2d_same(inp_data,output_num, kernel_size,stride,scope=None):
         #     mode='CONSTANT', 可以取三个值，分别是"CONSTANT" ,"REFLECT","SYMMETRIC"
         #     name=None
         # )
+        print('kernel_size,stride',kernel_size,stride)
         return  slim.conv2d(inp_data,output_num,kernel_size,stride=stride,padding='VALID', scope=scope)
         #padding='VALID' 不会超出屏幕外部，得到比原先平面小的平面
 
@@ -89,7 +90,7 @@ def bottleneck(inp_data,depth,depth_bottlenexk,stride,outputs_collections =None,
         # depth_in = slim.utils.last_dimension(inp_data.get_shape(),min_rank=4)
         depth_in = slim.utils.last_dimension(inp_data.get_shape(), min_rank=4) ##shape的取第四个值
         # preact = slim.batch_norm(inp_data, activation_fn=tf.nn.relu, scope='preact')
-        preact = slim.batch_norm(inp_data, activation_fn=tf.nn.relu,scope ='preact')
+        preact = slim.batch_norm(inp_data, activation_fn=tf.nn.relu,scope ='preact')   # 归一化（BN）加激活函数
         print('传入特征数量',depth,'数据特征数量',depth_in)
 
         if depth == depth_in:  #比较两个层数据结构
@@ -98,11 +99,14 @@ def bottleneck(inp_data,depth,depth_bottlenexk,stride,outputs_collections =None,
             shortcut= slim.conv2d(preact,depth,[1,1],stride=stride,normalizer_fn =None,activation_fn =None,scope ='shortcut')
             print('这是进入了else',shortcut)
         print('天才第一步',preact)
-        residual = slim.conv2d(preact,depth_bottlenexk,[1,1],stride=1,scope='conv1')    # 1*1的卷积核步长为1从原先的特征值到depth_bottlenexk个特征值
+
+
+        # 下面过程为：压缩0.25倍”→“卷积提特征”→“扩张”（是ResNet的特点，而MobileNetV2则是Inverted residuals,即：“扩张”→“卷积提特征”→ “压缩”）
+        residual = slim.conv2d(preact,depth_bottlenexk,[1,1],stride=1,scope='conv1')    # 1*1的卷积核步长为1从原先的特征值到0.25倍要提取的特征值
         print('天才第二步', residual)
-        residual = conv2d_same(residual,depth_bottlenexk,3,stride,scope='conv2')        # 3*3的卷积核步长为stride根据步长情况改变大小
+        residual = conv2d_same(residual,depth_bottlenexk,3,stride,scope='conv2')        # 3*3的卷积核步长为stride根据步长情况改变大小 ，抽取特征值
         print('天才第三步', residual)
-        residual = slim.conv2d(residual,depth,[1,1],stride=1,normalizer_fn=None,activation_fn =None,scope='conv3')  # 用1*1的卷积核，步长为1来改变抽去的特征值数量方便相加
+        residual = slim.conv2d(residual,depth,[1,1],stride=1,normalizer_fn=None,activation_fn =None,scope='conv3')  # 用1*1的卷积核，对原网络抽取特征进行扩张
         print('天才第四步',residual)
         output= shortcut + residual #把前面层和当前层结果相加
         print('\n\n')

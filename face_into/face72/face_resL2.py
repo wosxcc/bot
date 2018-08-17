@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 import datetime
 from tensorflow.python.framework import graph_util
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
 label_lines = []
@@ -134,19 +134,19 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
         y_conv = tf.add(tf.matmul(fc1, weights2), biases2, name="output")
     rmse = tf.sqrt(tf.reduce_mean(tf.square( y - y_conv)))
 
-    with tf.variable_scope('costs'):
-        cost =tf.reduce_mean(rmse,name='rmse')
-        costs = []
-        for var in tf.trainable_variables():
-            if var.op.name.find(r'DW')>0:
-                costs.append(tf.nn.l2_loss(var))
-        if len(costs)>0:
-            cost +=tf.multiply(0.0002,tf.add_n(costs))
+    # with tf.variable_scope('costs'):
+    #     cost =tf.reduce_mean(rmse,name='rmse')
+    #     costs = []
+    #     for var in tf.trainable_variables():
+    #         if var.op.name.find(r'DW')>0:
+    #             costs.append(tf.nn.l2_loss(var))
+    #     if len(costs)>0:
+    #         cost +=tf.multiply(0.002,tf.add_n(costs))
 
     with tf.name_scope("optimizer"):
         optimize = tf.train.AdamOptimizer(learning_rate=learning_rate)
         global_step = tf.Variable(0, name="global_step", trainable=False)
-        train_op = optimize.minimize(cost, global_step=global_step)
+        train_op = optimize.minimize(rmse, global_step=global_step)
     return dict(
         x=x,
         y=y,
@@ -166,10 +166,12 @@ def run_training(txt_name):
     saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
     ckpt = tf.train.get_checkpoint_state(logs_train_dir)
+    y_step = 0
     if ckpt and ckpt.model_checkpoint_path:
         global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
         saver.restore(sess, ckpt.model_checkpoint_path)
-
+        # print(global_step.split('-')(1))
+        y_step = int(float(global_step.split('-')[0]))
     for step in np.arange(MAX_STEP):
         for i in range(BATCH_SIZE):
             xb= (step%664)*16+i
@@ -189,7 +191,7 @@ def run_training(txt_name):
 
 
         if step % 50 == 0:
-            print('Step %d,train loss = %.5f' % (step, tra_loss))
+            print('Step %d,train loss = %.5f' % (step+y_step, tra_loss))
             constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
                                                                        ['output/output'])
             with tf.gfile.FastGFile(logs_train_dir + 'face72.pb', mode='wb') as f:
@@ -201,7 +203,7 @@ def run_training(txt_name):
             # train_writer.add_summary(summary_str, step)
         if step % 200 == 0 or (step + 1) == MAX_STEP:
             checkpoint_path = os.path.join(logs_train_dir, 'model.ckpt')
-            saver.save(sess, checkpoint_path, global_step=step)
+            saver.save(sess, checkpoint_path, global_step=step+y_step)
             # 每迭代200次，利用saver.save()保存一次模型文件，以便测试的时候使用
     sess.close()
 
@@ -213,7 +215,7 @@ IMG_H = 96
 
 BATCH_SIZE = 16
 CAPACITY = 16
-MAX_STEP = 332000
+MAX_STEP = 5000
 learning_rate = 0.00001
 N_CLASSES = 30
 run_training(txt_name)

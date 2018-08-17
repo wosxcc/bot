@@ -4,17 +4,20 @@ from  scipy.cluster.vq import *
 import cv2 as cv
 from sklearn.datasets.samples_generator import make_blobs
 
-img=cv.imread('2.jpg')
+img=cv.imread('1.jpg')
 # cv.imshow('img',img)
 img=cv.resize(img,(480,480),cv.INTER_CUBIC)
+cv.imshow('imgs',img)
+cv.waitKey()
 imgs=np.float32(img)
 # print(imgg.shape)
 # cv.waitKey()
 
 
-steps= 20
+steps= 3
 sx=int(imgs.shape[1]/steps)
 sy=int(imgs.shape[0]/steps)
+
 
 fmeans =[]
 for x in range(sx):
@@ -39,6 +42,7 @@ for x in range(sx):
         else:
             nimg[y * steps:(y + 1) * steps, x * steps:(x + 1) * steps, 2] = 255
 print(centroids)
+cv.imshow('imgs',imgs)
 cv.imshow('nimg',nimg)
 cv.waitKey()
 print(code)

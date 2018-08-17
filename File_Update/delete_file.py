@@ -8,6 +8,7 @@ count=0
 file_path=  'E:/BOT_Person/trainb'
 
 file_path = 'E:/dectect/dectect/face68'
+file_path = 'E:/BOT_Person/trainb480'
 ##'F:/YOLO训练数据/person/trainc'
 
 for file_name in os.listdir(file_path):

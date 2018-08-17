@@ -289,7 +289,7 @@ def val(test_file):
                 # print('Loading success')
             else:
                 print('No checkpoint')
-            prediction = sess.run(logits, feed_dict={x: image_arr})
+            prediction = sess.run(logits, feed_dict={x: image})
             return prediction
 
 

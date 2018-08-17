@@ -21,7 +21,7 @@ if  int(minor_ver)>=3 and int(major_ver)>2:
     if tracker_type=='MEDIANFLOW':
         tracker=cv.TrackerMEDIANFLOW_create()
 
-video= cv.VideoCapture('D:/pproject/ppop/image/2.mp4')
+video= cv.VideoCapture(0) #'D:/pproject/ppop/image/2.mp4'
 bbox = [(287, 23, 86, 320),(200,200,60,60)]
 print(bbox)
 while True:

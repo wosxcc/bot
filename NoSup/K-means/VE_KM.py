@@ -3,7 +3,7 @@ from  scipy.cluster.vq import *
 from  scipy.misc import  imresize
 import cv2 as cv
 import datetime
-cap=cv.VideoCapture(0)
+cap=cv.VideoCapture('E:/BOT_Car/bot_car/test2.mp4')
 while(1):
     ret, img = cap.read()
     # img = cv.imread('4.jpg')
@@ -11,7 +11,7 @@ while(1):
     xtime=datetime.datetime.now()
 
     imgs=cv.resize(img,(480,480),cv.INTER_CUBIC)
-    steps= 20
+    steps= 1
     sx=int(imgs.shape[1]/steps)
     sy=int(imgs.shape[0]/steps)
 
@@ -24,7 +24,7 @@ while(1):
             fmeans.append([R,G,B])
     fmeans =np.array(fmeans,'f')
     # print('fmeans',fmeans)
-    centroids,variance=kmeans(fmeans,3)
+    centroids,variance=kmeans(fmeans,2)
     code,distance=vq(fmeans,centroids)
 
     codess=np.reshape(code,(sx,sy))

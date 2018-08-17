@@ -230,7 +230,7 @@ def train_resnet():
 init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init)
-learning_rate=0.0000001
+learning_rate=0.0001
 txt_name= 'trains.txt'
 N_CLASSES = 30
 IMG_W = 96

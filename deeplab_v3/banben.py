@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import cv2  as cv# used for resize. if you dont have it, use anything else
 import numpy as np
-from model import Deeplabv3
+from deeplab_v3.model import Deeplabv3
 import datetime
 deeplab_model = Deeplabv3()
 img = cv.imread("./imgs/psb1.jpg")

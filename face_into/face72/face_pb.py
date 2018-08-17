@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 import datetime
 from tensorflow.python.framework import graph_util
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 label_lines = []
 image_lines = []
 
@@ -32,7 +32,7 @@ def read_img(txt_name):
 
     label_linesc=[[float(i) for i in xline] for xline in label_lines]
     ximage_lines=np.array(image_lines, dtype='float32')
-    ximage_lines/=255
+    ximage_lines = ximage_lines/256
 
     xlabel_linesc=np.array(label_linesc, dtype='float32')
     return ximage_lines,xlabel_linesc
@@ -97,28 +97,42 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
         relu7 = tf.nn.relu(tf.nn.bias_add(conv7, b7), name='relu7')
 
 
+
         # 全连接层
     with tf.variable_scope("fc1") as scope:
 
         dim = int(np.prod(relu7.get_shape()[1:]))
         reshape = tf.reshape(relu7, [-1, dim])
-        weights1 =weight_variable([dim, 240])
-        biases1 = bias_variable([240])
-        fc1 = tf.nn.relu(tf.matmul(reshape, weights1) + biases1, name="fc1")
+        weights1 =weight_variable([dim, 256])   ##24*24*256*256
+        biases1 = bias_variable([256])
+        fc1 = tf.nn.dropout(tf.nn.relu(tf.matmul(reshape, weights1) + biases1, name="fc1"),0.5)
+
+    with tf.variable_scope("fc2") as scope:
+        weights122 =weight_variable([256, 1024])
+        biases122 = bias_variable([1024])
+        fc2 = tf.nn.dropout(tf.nn.relu(tf.matmul(fc1, weights122) + biases122, name="fc2"),0.5)
 
     with tf.variable_scope("output") as scope:
-        weights2 = weight_variable([240, n_classes])
+        weights2 = weight_variable([1024, n_classes])
         biases2 = bias_variable([n_classes])
-        y_conv = tf.add(tf.matmul(fc1, weights2), biases2, name="output")
+        # y_conv = tf.sigmoid(tf.matmul(fc2, weights2)+biases2, name="output")
+        # y_conv = tf.sigmoid(tf.matmul(fc2, weights2)+biases2, name="output")
+        y_conv=tf.add(tf.matmul(fc2, weights2),biases2, name="output")
+
+    # rmse = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y))
     rmse = tf.sqrt(tf.reduce_mean(tf.square( y - y_conv)))
 
     with tf.name_scope("optimizer"):
         optimize = tf.train.AdamOptimizer(learning_rate=learning_rate)
         global_step = tf.Variable(0, name="global_step", trainable=False)
         train_op = optimize.minimize(rmse, global_step=global_step)
+    print()
     return dict(
         x=x,
         y=y,
+        weights2= [weights2,weights122],
+        biases2=[biases2,biases122],
+        y_conv=y_conv,
         optimize=train_op,
         cost=rmse,
     )
@@ -126,7 +140,7 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
 
 
 def run_training(txt_name):
-    logs_train_dir = './face72/facepb30/'
+    logs_train_dir = './face72/face_0807/'
     X_data, Y_data = read_img(txt_name)
     graph= face_net(BATCH_SIZE, IMG_H,IMG_W, N_CLASSES,learning_rate)
     # summary_op = tf.summary.merge_all()
@@ -135,20 +149,22 @@ def run_training(txt_name):
     saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
     ckpt = tf.train.get_checkpoint_state(logs_train_dir)
+    y_step=0
     if ckpt and ckpt.model_checkpoint_path:
         global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
         saver.restore(sess, ckpt.model_checkpoint_path)
-
+        print(global_step)
+        y_step = int(float(global_step))
     for step in np.arange(MAX_STEP):
         for i in range(BATCH_SIZE):
             xb= (step%332)*32+i
-            # ximage=np.array(X_data[xb]*255, dtype='uint8')
+            # ximage=np.array(X_data[xb]*255+127.5, dtype='uint8')
             # for xxi in range(72):
             #     cv.circle(ximage,(int(Y_data[xb][2+2*xxi]*96),int(Y_data[xb][2+2*xxi+1]*96)),2,(0, 255, 255), -1)
             # cv.imshow('ximage',ximage)
             # cv.waitKey()
-
-            _ ,tra_loss= sess.run([graph['optimize'],graph['cost']],feed_dict={
+            # print(xb)
+            _, tra_loss, weights2, biases2 = sess.run([graph['optimize'],graph['cost'],graph['weights2'],graph['biases2']],feed_dict={
                         graph['x']: np.reshape(X_data[xb], (1, 96, 96, 3)),
                         graph['y']: np.reshape(Y_data[xb], (1, 30))})
 
@@ -156,9 +172,8 @@ def run_training(txt_name):
              #    graph['x']: np.reshape(X_data[xb], (1, 96, 96, 3)),
              #    graph['y']: np.reshape(Y_data[xb], (1, 30))})
 
-
         if step % 50 == 0:
-            print('Step %d,train loss = %.5f' % (step, tra_loss))
+            print('Step %d,train loss = %.5f' % (step+y_step, tra_loss))
             constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
                                                                        ['output/output'])
             with tf.gfile.FastGFile(logs_train_dir + 'face72.pb', mode='wb') as f:
@@ -170,7 +185,7 @@ def run_training(txt_name):
             # train_writer.add_summary(summary_str, step)
         if step % 200 == 0 or (step + 1) == MAX_STEP:
             checkpoint_path = os.path.join(logs_train_dir, 'model.ckpt')
-            saver.save(sess, checkpoint_path, global_step=step)
+            saver.save(sess, checkpoint_path, global_step=step+y_step)
             # 每迭代200次，利用saver.save()保存一次模型文件，以便测试的时候使用
     sess.close()
 
@@ -182,72 +197,94 @@ IMG_H = 96
 
 BATCH_SIZE = 32
 CAPACITY = 32
-MAX_STEP = 332000
-learning_rate = 0.0000001
+MAX_STEP = 4000
+learning_rate = 0.0001
 N_CLASSES = 30
-run_training(txt_name)
+# run_training(txt_name)
 
 
-#
-# def get_one_image(img_dir):
-#     image = cv.imread(img_dir)
-#     # 好像一次只能打开一张图片，不能一次打开一个文件夹，这里大家可以去搜索一下
-#     bei_x = IMG_W / int(image.shape[1])
-#     bei_y = IMG_H / int(image.shape[0])
-#     min_bian = min(image.shape[0], image.shape[1])
-#     max_bian = max(image.shape[0], image.shape[1])
-#     image = cv.resize(image, None, fx=bei_x, fy=bei_y, interpolation=cv.INTER_CUBIC)
-#     image_arr = np.array(image)
-#
-#     return image_arr
-#
-#
-# def val(test_file):
-#     log_dir = './face72/facepbx/'
-#     # image_arr=test_file
-#     image_arr = get_one_image(test_file)
-#     with tf.Graph().as_default():
-#         image = tf.cast(image_arr, tf.float32)
-#         image = tf.image.per_image_standardization(image)  ###归一化操作
-#         image = tf.reshape(image, [1, IMG_W, IMG_H, 3])
-#         op_intp = np.zeros(N_CLASSES, np.float32)
-#         p, r = face_net(image, op_intp, 1, N_CLASSES)
-#         # print('看看p的值：',p)
-#         logits = p  # tf.nn.softmax(p)
-#         x = tf.placeholder(tf.float32, shape=[IMG_W, IMG_H, 3])
-#         saver = tf.train.Saver()
-#         with tf.Session() as sess:
-#             ckpt = tf.train.get_checkpoint_state(log_dir)
-#             if ckpt and ckpt.model_checkpoint_path:
-#                 global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-#                 saver.restore(sess, ckpt.model_checkpoint_path)
-#                 # 调用saver.restore()函数，加载训练好的网络模型
-#                 # print('Loading success')
-#             else:
-#                 print('没有保存的模型')
-#             prediction = sess.run(logits, feed_dict={x: image_arr})
-#             return prediction
-#
-# file_path = '../face68/image_test'
-# for file in os.listdir(file_path):
-#     img_path = file_path + '/' + file
-#     img = cv.imread(img_path)
-#     start_time = datetime.datetime.now()
-#     prediction = val(img_path)
-#     print('耗时：',datetime.datetime.now()-start_time     )
-#     img = cv.resize(img, (480, 480), interpolation=cv.INTER_CUBIC)
-#     print( prediction[0][0:2])
-#     biaoq ='None'
-#     if prediction[0][0]>= 0.8 and prediction[0][0]<1.6:
-#         biaoq = 'Smile'
-#     elif prediction[0][0]>=1.6:
-#         biaoq = 'Laugh'
-#     biaoq+=':' + str(prediction[0][1])
-#     img = cv.putText(img, biaoq, (0, 30), 2, cv.FONT_HERSHEY_PLAIN, (255, 0, 0))
-#     for i in range(int(len(prediction[0]) / 2)-1):
-#         cv.circle(img, (int(prediction[0][2+i * 2] * img.shape[1]), int(prediction[0][2+i * 2 + 1] * img.shape[0])), 2,
-#                   (0, 255, 255), -1)
-#
-#     cv.imshow('img', img)
-#     cv.waitKey()
-#     cv.destroyAllWindows()
+
+
+def get_one_image(img_dir):
+    image = cv.imread(img_dir)
+    # 好像一次只能打开一张图片，不能一次打开一个文件夹，这里大家可以去搜索一下
+    bei_x = 96 / int(image.shape[1])
+    bei_y = 96 / int(image.shape[0])
+    min_bian = min(image.shape[0], image.shape[1])
+    max_bian = max(image.shape[0], image.shape[1])
+    # bei_x = 48 / max_bian
+    # print(12346)
+    # if image.shape[0] == min_bian:
+    #     cha = int((image.shape[1] - min_bian) / 2)
+    #     images = np.zeros((image.shape[1], image.shape[1], 3), np.uint8)
+    #     images[cha:cha + min_bian, :, :] = image
+    #     image = cv.resize(images, None, fx=bei_x, fy=bei_x, interpolation=cv.INTER_CUBIC)
+    # else:
+    #     cha = int((image.shape[0] - min_bian) / 2)
+    #     images = np.zeros((image.shape[0], image.shape[0], 3), np.uint8)
+    #     images[:, cha:cha + min_bian, :] = image
+    #     image = cv.resize(images, None, fx=bei_x, fy=bei_x, interpolation=cv.INTER_CUBIC)
+    image = cv.resize(image, None, fx=bei_x, fy=bei_y, interpolation=cv.INTER_CUBIC)
+    image_arr = np.array(image)
+
+    return image_arr
+
+
+def val(test_file):
+    log_dir = './face72/face_0807/'
+    # image_arr=test_file
+    image_arr = get_one_image(test_file)
+    with tf.Graph().as_default():
+        image =image_arr/256
+        # image = tf.cast(image_arr, tf.float32)
+        # image = tf.image.per_image_standardization(image)  ###归一化操作
+        # image = tf.reshape(image, [1, 96, 96, 3])
+        op_intp = np.zeros(N_CLASSES, np.float32)
+
+        # batch_size,height, width, n_classes,learning_rate
+        graph= face_net(1,96, 96, 30,learning_rate)
+        # print('看看p的值：',p)
+        # logits = graph['cost'] # tf.nn.softmax(p)
+        # x = tf.placeholder(tf.float32, shape=[1,96, 96, 3])
+        saver = tf.train.Saver()
+        with tf.Session() as sess:
+            ckpt = tf.train.get_checkpoint_state(log_dir)
+            print('看看值',ckpt.model_checkpoint_path)
+            if ckpt and ckpt.model_checkpoint_path:
+                global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+                saver.restore(sess, ckpt.model_checkpoint_path)
+                # 调用saver.restore()函数，加载训练好的网络模型
+                # print('Loading success')
+            else:
+                print('没有保存的模型')
+            prediction = sess.run(graph['y_conv'] , feed_dict={graph['x']: np.reshape(image, (1, 96, 96, 3)),graph['y']:np.reshape(op_intp, (1, 30))})
+            return prediction
+
+file_path = '../face68/image_test'
+# file_path ='E:/face68/trainb'
+# file_path ='E:/face into'
+# file_path ='E:/face72/trainb'
+# file_path ='E:/face68/trainb'
+for file in os.listdir(file_path):
+    img_path = file_path + '/' + file
+    img = cv.imread(img_path)
+    start_time = datetime.datetime.now()
+    prediction = val(img_path)
+    print('耗时：',datetime.datetime.now()-start_time     )
+    img = cv.resize(img, (480, 480), interpolation=cv.INTER_CUBIC)
+    print( prediction[0][0:2])
+
+    biaoq ='None'
+    if prediction[0][0]>= 0.8 and prediction[0][0]<1.6:
+        biaoq = 'Smile'
+    elif prediction[0][0]>=1.6:
+        biaoq = 'Laugh'
+    biaoq+=':' + str(prediction[0][1])
+    img = cv.putText(img, biaoq, (0, 30), 2, cv.FONT_HERSHEY_PLAIN, (255, 0, 0))
+    for i in range(int(len(prediction[0]) / 2)-1):
+        cv.circle(img, (int(prediction[0][2+i * 2] * img.shape[1]), int(prediction[0][2+i * 2 + 1] * img.shape[0])), 2,
+                  (0, 255, 255), -1)
+
+    cv.imshow('img', img)
+    cv.waitKey()
+    cv.destroyAllWindows()

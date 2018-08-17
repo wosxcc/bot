@@ -18,7 +18,7 @@ image_dim = 27648 # 28*28 pixels * 1 channel
 gen_hidden_dim = 256
 disc_hidden_dim = 256
 noise_dim = 200 # Noise data points
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
 def get_batch(image, img_W, img_H, batch_size, capacity):
