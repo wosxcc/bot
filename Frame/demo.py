@@ -136,7 +136,6 @@ if __name__ == '__main__':
     dataset = args.dataset
     tfmodel = os.path.join('./default', demonet, DATASETS[dataset][0], 'default', NETS[demonet][0])
     tfmodel='./output/vgg16_faster_rcnn_iter_35200.ckpt'
-    print(tfmodel)
     print(tfmodel + '.meta')
     if not os.path.isfile(tfmodel + '.meta'):
         print(tfmodel)
