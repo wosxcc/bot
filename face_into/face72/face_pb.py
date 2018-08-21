@@ -4,6 +4,14 @@ import numpy as np
 import tensorflow as tf
 import datetime
 from tensorflow.python.framework import graph_util
+import matplotlib.pyplot as plt
+import matplotlib
+is_ipython = 'inline' in matplotlib.get_backend()
+if is_ipython:
+    from IPython import display
+
+plt.ion()
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 label_lines = []
 image_lines = []
@@ -137,10 +145,23 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
         cost=rmse,
     )
 
+def plot_durations(x,y):
+    plt.figure(1)
+    plt.clf()
+    # plt.subplot(111)
+    plt.plot(x, y, 'ro')
+    plt.xlim((0, MAX_STEP))
+    plt.ylim((0, 1))
+    plt.pause(0.001)  # 暂停一点，以便更新绘图
+    # if is_ipython:
+    #     display.clear_output(wait=True)           # 清除页面上的内容
+        # display.display(plt.gcf())
+
+
 
 
 def run_training(txt_name):
-    logs_train_dir = './face72/face_0807/'
+    logs_train_dir = './face72/face_0821/'
     X_data, Y_data = read_img(txt_name)
     graph= face_net(BATCH_SIZE, IMG_H,IMG_W, N_CLASSES,learning_rate)
     # summary_op = tf.summary.merge_all()
@@ -155,7 +176,14 @@ def run_training(txt_name):
         saver.restore(sess, ckpt.model_checkpoint_path)
         print(global_step)
         y_step = int(float(global_step))
+
+
+    loss_list ={}
+    loss_list['x']=[]
+    loss_list['y'] = []
+
     for step in np.arange(MAX_STEP):
+        loss_avg=0.0
         for i in range(BATCH_SIZE):
             xb= (step%332)*32+i
             # ximage=np.array(X_data[xb]*255+127.5, dtype='uint8')
@@ -167,13 +195,26 @@ def run_training(txt_name):
             _, tra_loss, weights2, biases2 = sess.run([graph['optimize'],graph['cost'],graph['weights2'],graph['biases2']],feed_dict={
                         graph['x']: np.reshape(X_data[xb], (1, 96, 96, 3)),
                         graph['y']: np.reshape(Y_data[xb], (1, 30))})
+            loss_avg+=tra_loss
+
+        avg_loss =loss_avg/BATCH_SIZE
+
+        loss_list['x'].append(step+y_step)
+        loss_list['y'].append(avg_loss)
+
+        plot_durations(np.array(loss_list['x']), np.array(loss_list['y']))   #
+        # plt.plot(loss_list['x'],loss_list['y'],'ro')
+        # plt.draw()
+
+
+        print('次数：',step,'对应loss:',avg_loss)
 
              # = sess.run(, feed_dict={
              #    graph['x']: np.reshape(X_data[xb], (1, 96, 96, 3)),
              #    graph['y']: np.reshape(Y_data[xb], (1, 30))})
 
         if step % 50 == 0:
-            print('Step %d,train loss = %.5f' % (step+y_step, tra_loss))
+            print('Step %d,train loss = %.5f' % (step+y_step, avg_loss))
             constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
                                                                        ['output/output'])
             with tf.gfile.FastGFile(logs_train_dir + 'face72.pb', mode='wb') as f:
@@ -200,7 +241,7 @@ CAPACITY = 32
 MAX_STEP = 4000
 learning_rate = 0.0001
 N_CLASSES = 30
-# run_training(txt_name)
+run_training(txt_name)
 
 
 
