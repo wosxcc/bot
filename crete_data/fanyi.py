@@ -70,7 +70,7 @@ if __name__ == "__main__":
             en_txt += txt_line['words']
             img_PIL = Image.fromarray(cv.cvtColor(img, cv.COLOR_BGR2RGB))
             ##打印文字
-            ssscc = zwen.encode("utf-8").decode('unicode_escape')
+            ssscc = zwen.encode("utf-8").decode('unicode_escape')           # 图片上显示中文
             font = ImageFont.truetype("simhei.ttf", int(txt_line['location']['height']), encoding="utf-8")  ##第二个为字体大小
             # 字体颜色
             fillColor = (255, 0, 0)

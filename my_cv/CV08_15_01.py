@@ -142,7 +142,7 @@ while (1):
     print('耗时:', datetime.datetime.now() - xtime)
     cv2.imshow('frame', frame)
     # cv2.waitKey()
-    k = cv2.waitKey(100) & 0xff
+    k = cv2.waitKey(30) & 0xff
     if k == 27:
         break
 # out.release()
