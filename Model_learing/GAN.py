@@ -24,13 +24,12 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 def get_batch(image, img_W, img_H, batch_size, capacity):
     image = tf.cast(image, tf.string)
     input_queue = tf.train.slice_input_producer([image])
-    image = tf.image.decode_jpeg(input_queue[0], channels=3)
-    image = tf.image.resize_image_with_crop_or_pad(image, img_W, img_H)
-    image = tf.image.per_image_standardization(image)
-    image_batch = tf.train.batch([image], batch_size=batch_size,  num_threads=32, capacity=capacity)
+    image = tf.image.decode_jpeg(input_queue[0], channels=3)                # 读取图片
+    image = tf.image.resize_image_with_crop_or_pad(image, img_W, img_H)     # 调整图片大小
+    image = tf.image.per_image_standardization(image)                       # 图像标准化
+    image_batch = tf.train.batch([image], batch_size=batch_size,  num_threads=32, capacity=capacity)    # 生成批次
 
-    image_batch = tf.cast(image_batch, tf.float32)
-    print(image_batch)
+    image_batch = tf.cast(image_batch, tf.float32)                          # 格式转换
     return image_batch
 path_file = 'E:/xbot/my_tf/gangan'
 img_name=[]
@@ -58,71 +57,71 @@ def generator(x, reuse=False):
     with tf.variable_scope('Generator', reuse=reuse):
         # TensorFlow Layers automatically create variables and calculate their
         # shape, based on the input.
-        x = tf.layers.dense(x, units=23 * 23 * 128)
-        x = tf.nn.tanh(x)
+        x = tf.layers.dense(x, units=23 * 23 * 128)           # 全连接层可用于正向也可用于逆向
+        x = tf.nn.tanh(x)                                     # 激活函数
         # Reshape to a 4-D array of images: (batch, height, width, channels)
         # New shape: (batch, 6, 6, 128)
-        x = tf.reshape(x, shape=[-1, 23, 23, 128])
+        x = tf.reshape(x, shape=[-1, 23, 23, 128])            # 形状转换
         # Deconvolution, image shape: (batch, 14, 14, 64)
-        x = tf.layers.conv2d_transpose(x, 64, 4, strides=2)    # tf.layers.conv2d_transpose 解卷积
+        x = tf.layers.conv2d_transpose(x, 64, 4, strides=2)   # tf.layers.conv2d_transpose 解卷积扩大两倍
         # 卷积，图像形状：（batch，96, 96, 3）
-        x = tf.layers.conv2d_transpose(x, 3, 2, strides=2)
+        x = tf.layers.conv2d_transpose(x, 3, 2, strides=2)    # 反卷积扩大两倍
         #应用SigMID来剪辑0到1之间的值。
         x = tf.nn.sigmoid(x)
 
         return x
 
 
-# def deconv2d(input_, output_shape,
-#          k_h=5, k_w=5, d_h=2, d_w=2, stddev=0.02,
-#          name="deconv2d", with_w=False):
-#     with tf.variable_scope(name):
-#         # filter : [height, width, output_channels, in_channels]
-#         w = tf.get_variable('w', [k_h, k_w, output_shape[-1], input_.get_shape()[-1]],initializer=tf.random_normal_initializer(stddev=stddev))
-#         try:
-#             deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape, strides=[1, d_h, d_w, 1])
-#         # Support for verisons of TensorFlow before 0.7.0
-#         except AttributeError:
-#             deconv = tf.nn.deconv2d(input_, w, output_shape=output_shape,strides=[1, d_h, d_w, 1])
-#         biases = tf.get_variable('biases', [output_shape[-1]], initializer=tf.constant_initializer(0.0))
-#         deconv = tf.reshape(tf.nn.bias_add(deconv, biases), deconv.get_shape())
-#         if with_w:
-#             return deconv, w, biases
-#         else:
-#             return deconv
-#
-# def generator(self, z, y=None):
-#     with tf.variable_scope("generator") as scope:
-#         if not self.y_dim:
-#             # s是输出图片的大小，比如s是64，s2为32，s4为16，s8为8,s16为4
-#             s = self.output_size
-#             s2, s4, s8, s16 = int(s / 2), int(s / 4), int(s / 8), int(s / 16)
-#             # project `z` and reshape
-#             self.z_, self.h0_w, self.h0_b = linear(z, self.gf_dim * 8 * s16 * s16, 'g_h0_lin', with_w=True)
-#             self.h0 = tf.reshape(self.z_, [-1, s16, s16, self.gf_dim * 8])
-#             h0 = tf.nn.relu(self.g_bn0(self.h0))
-#             self.h1, self.h1_w, self.h1_b = deconv2d(h0,[self.batch_size, s8, s8, self.gf_dim * 4], name='g_h1',with_w=True)
-#             h1 = tf.nn.relu(self.g_bn1(self.h1))
-#             h2, self.h2_w, self.h2_b = deconv2d(h1,[self.batch_size, s4, s4, self.gf_dim * 2], name='g_h2',with_w=True)
-#             h2 = tf.nn.relu(self.g_bn2(h2))
-#             h3, self.h3_w, self.h3_b = deconv2d(h2,[self.batch_size, s2, s2, self.gf_dim * 1], name='g_h3',with_w=True)
-#             h3 = tf.nn.relu(self.g_bn3(h3))
-#             h4, self.h4_w, self.h4_b = deconv2d(h3,[self.batch_size, s, s, self.c_dim], name='g_h4', with_w=True)
-#             return tf.nn.tanh(h4)
-#         else:
-#             s = self.output_size
-#             s2, s4 = int(s / 2), int(s / 4)
-#             # yb = tf.expand_dims(tf.expand_dims(y, 1),2)
-#             yb = tf.reshape(y, [self.batch_size, 1, 1, self.y_dim])
-#             z = tf.concat(1, [z, y])
-#             h0 = tf.nn.relu(self.g_bn0(linear(z, self.gfc_dim, 'g_h0_lin')))
-#             h0 = tf.concat(1, [h0, y])
-#             h1 = tf.nn.relu(self.g_bn1(linear(h0, self.gf_dim * 2 * s4 * s4, 'g_h1_lin')))
-#             h1 = tf.reshape(h1, [self.batch_size, s4, s4, self.gf_dim * 2])
-#             h1 = conv_cond_concat(h1, yb)
-#             h2 = tf.nn.relu(self.g_bn2(deconv2d(h1, [self.batch_size, s2, s2, self.gf_dim * 2], name='g_h2')))
-#             h2 = conv_cond_concat(h2, yb)
-#         return tf.nn.sigmoid(deconv2d(h2, [self.batch_size, s, s, self.c_dim], name='g_h3'))
+def deconv2d(input_, output_shape,
+         k_h=5, k_w=5, d_h=2, d_w=2, stddev=0.02,
+         name="deconv2d", with_w=False):
+    with tf.variable_scope(name):
+        # filter : [height, width, output_channels, in_channels]
+        w = tf.get_variable('w', [k_h, k_w, output_shape[-1], input_.get_shape()[-1]],initializer=tf.random_normal_initializer(stddev=stddev))
+        try:
+            deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape, strides=[1, d_h, d_w, 1])
+        # Support for verisons of TensorFlow before 0.7.0
+        except AttributeError:
+            deconv = tf.nn.deconv2d(input_, w, output_shape=output_shape,strides=[1, d_h, d_w, 1])
+        biases = tf.get_variable('biases', [output_shape[-1]], initializer=tf.constant_initializer(0.0))
+        deconv = tf.reshape(tf.nn.bias_add(deconv, biases), deconv.get_shape())
+        if with_w:
+            return deconv, w, biases
+        else:
+            return deconv
+
+def generator(self, z, y=None):
+    with tf.variable_scope("generator") as scope:
+        if not self.y_dim:
+            # s是输出图片的大小，比如s是64，s2为32，s4为16，s8为8,s16为4
+            s = self.output_size
+            s2, s4, s8, s16 = int(s / 2), int(s / 4), int(s / 8), int(s / 16)
+            # project `z` and reshape
+            self.z_, self.h0_w, self.h0_b = linear(z, self.gf_dim * 8 * s16 * s16, 'g_h0_lin', with_w=True)
+            self.h0 = tf.reshape(self.z_, [-1, s16, s16, self.gf_dim * 8])
+            h0 = tf.nn.relu(self.g_bn0(self.h0))
+            self.h1, self.h1_w, self.h1_b = deconv2d(h0,[self.batch_size, s8, s8, self.gf_dim * 4], name='g_h1',with_w=True)
+            h1 = tf.nn.relu(self.g_bn1(self.h1))
+            h2, self.h2_w, self.h2_b = deconv2d(h1,[self.batch_size, s4, s4, self.gf_dim * 2], name='g_h2',with_w=True)
+            h2 = tf.nn.relu(self.g_bn2(h2))
+            h3, self.h3_w, self.h3_b = deconv2d(h2,[self.batch_size, s2, s2, self.gf_dim * 1], name='g_h3',with_w=True)
+            h3 = tf.nn.relu(self.g_bn3(h3))
+            h4, self.h4_w, self.h4_b = deconv2d(h3,[self.batch_size, s, s, self.c_dim], name='g_h4', with_w=True)
+            return tf.nn.tanh(h4)
+        else:
+            s = self.output_size
+            s2, s4 = int(s / 2), int(s / 4)
+            # yb = tf.expand_dims(tf.expand_dims(y, 1),2)
+            yb = tf.reshape(y, [self.batch_size, 1, 1, self.y_dim])
+            z = tf.concat(1, [z, y])
+            h0 = tf.nn.relu(self.g_bn0(linear(z, self.gfc_dim, 'g_h0_lin')))
+            h0 = tf.concat(1, [h0, y])
+            h1 = tf.nn.relu(self.g_bn1(linear(h0, self.gf_dim * 2 * s4 * s4, 'g_h1_lin')))
+            h1 = tf.reshape(h1, [self.batch_size, s4, s4, self.gf_dim * 2])
+            h1 = conv_cond_concat(h1, yb)
+            h2 = tf.nn.relu(self.g_bn2(deconv2d(h1, [self.batch_size, s2, s2, self.gf_dim * 2], name='g_h2')))
+            h2 = conv_cond_concat(h2, yb)
+        return tf.nn.sigmoid(deconv2d(h2, [self.batch_size, s, s, self.c_dim], name='g_h3'))
 
 
 # 网络#鉴频器

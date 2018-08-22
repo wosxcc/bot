@@ -186,7 +186,6 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
 
 def run_training(txt_name):
     imgs = draw_form(MAX_STEP)
-
     logs_train_dir = './face72/face_0821/'
     X_data, Y_data = read_img(txt_name)
     graph= face_net(BATCH_SIZE, IMG_H,IMG_W, N_CLASSES,learning_rate)
@@ -334,7 +333,7 @@ for file in os.listdir(file_path):
     img = cv.imread(img_path)
     start_time = datetime.datetime.now()
     prediction = val(img_path)
-    print('耗时：',datetime.datetime.now()-start_time     )
+    print('耗时：',datetime.datetime.now()-start_time)
     img = cv.resize(img, (480, 480), interpolation=cv.INTER_CUBIC)
     print( prediction[0][0:2])
 

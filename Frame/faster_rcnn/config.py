@@ -69,9 +69,9 @@ _C.MODE_MASK = True        # FasterRCNN or MaskRCNN
 _C.MODE_FPN = False
 
 # dataset -----------------------
-_C.DATA.BASEDIR = 'F:/COCO'
-_C.DATA.TRAIN = ['train2017', 'annotations/instances_train2017']   # i.e., trainval35k
-_C.DATA.VAL = 'minival2014'   # For now, only support evaluation on single dataset
+_C.DATA.BASEDIR = 'E:/Model/Faster-RCNN/data/VOCdevkit2007'
+_C.DATA.TRAIN = ['VOC2007', 'Mian']   # i.e., trainval35k
+_C.DATA.VAL = 'val'   # For now, only support evaluation on single dataset
 _C.DATA.NUM_CATEGORY = 80    # 80 categories.
 _C.DATA.CLASS_NAMES = []  # NUM_CLASS (NUM_CATEGORY+1) strings, to be populated later by data loader. The first is BG.
 

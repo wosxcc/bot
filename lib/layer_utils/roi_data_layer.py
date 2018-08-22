@@ -74,5 +74,4 @@ class RoIDataLayer(object):
     def forward(self):
         """Get blobs and copy them into this layer's top blob vector."""
         blobs = self._get_next_minibatch()
-        print('处理后的单个数据',blobs)
         return blobs

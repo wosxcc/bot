@@ -10,7 +10,7 @@ FLAGS2 = {}
 ######################
 # General Parameters #
 ######################
-FLAGS2["pixel_means"] = np.array([[[102.9801, 115.9465, 122.7717]]])
+FLAGS2["pixel_means"] = np.array([[[127.5, 127.5, 127.5]]])
 tf.app.flags.DEFINE_integer('rng_seed', 3, "Tensorflow seed for reproducibility")
 
 ######################
@@ -82,7 +82,7 @@ tf.app.flags.DEFINE_boolean('proposal_use_gt', False, "Whether to add ground tru
 ###########################
 # Bounding Box Parameters #
 ###########################
-tf.app.flags.DEFINE_float('roi_fg_threshold', 0.5, "Overlap threshold for a ROI to be considered foreground (if >= FG_THRESH)")
+tf.app.flags.DEFINE_float('roi_fg_threshold', 0.3, "Overlap threshold for a ROI to be considered foreground (if >= FG_THRESH)")
 tf.app.flags.DEFINE_float('roi_bg_threshold_high', 0.5, "Overlap threshold for a ROI to be considered background (class = 0 if overlap in [LO, HI))")
 tf.app.flags.DEFINE_float('roi_bg_threshold_low', 0.001, "Overlap threshold for a ROI to be considered background (class = 0 if overlap in [LO, HI))")
 

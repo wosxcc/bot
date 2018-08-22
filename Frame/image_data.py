@@ -133,7 +133,7 @@ def train():
         timer.tic()
         # Get training data, one batch at a time
         blobs = data_layer.forward()
-        print('比博客是', blobs['im_info'].shape, blobs['gt_boxes'].shape, blobs['data'].shape)
+        # print('比博客是', blobs['im_info'].shape, blobs['gt_boxes'].shape, blobs['data'].shape)
         # blobs['im_info'] 图像大小和比例(img_H,img_W,缩放比例)   , blobs['gt_boxes']框的位置和类别（x1,y1,x2,y2,class）,blobs['data']是一张600*800*3的图像
         # Compute the graph without summary
         rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss = net.train_step(sess, blobs, train_op)
