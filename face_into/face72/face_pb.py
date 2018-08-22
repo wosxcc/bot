@@ -4,13 +4,7 @@ import numpy as np
 import tensorflow as tf
 import datetime
 from tensorflow.python.framework import graph_util
-import matplotlib.pyplot as plt
-import matplotlib
-is_ipython = 'inline' in matplotlib.get_backend()
-if is_ipython:
-    from IPython import display
 
-plt.ion()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 label_lines = []
@@ -44,6 +38,50 @@ def read_img(txt_name):
 
     xlabel_linesc=np.array(label_linesc, dtype='float32')
     return ximage_lines,xlabel_linesc
+
+
+
+
+def draw_form(MAX_STEP):
+    step = MAX_STEP / 10
+    img_H = 1000
+    img_W = 1200
+    coordinate = np.zeros((img_H, img_W, 3), np.uint8)
+    coordinate[:, :, :] = 255
+    line_c = 8
+    coordinate = cv.line(coordinate, (100, img_H - 100), (img_W, img_H - 100), (0, 0, 0), 2)
+    coordinate = cv.line(coordinate, (100, 0), (100, img_H - 100), (0, 0, 0), 2)
+
+    for i in range(11):
+        coordinate = cv.line(coordinate, (i * 100 + 100, img_H - 100), (i * 100 + 100, 0), (0, 0, 0), 1)
+        coordinate = cv.line(coordinate, (100, i * 100 + 100), (img_W, i * 100 + 100), (0, 0, 0), 1)
+        if i > 0:
+            cv.putText(coordinate, str(i * step), (i * 100 + 100 - 32, img_H - 100 + 50), cv.FONT_HERSHEY_SIMPLEX, 0.6,
+                       (0, 0, 0), 2)
+        biaohao = '%.1f' % (1.0 - i * 0.1 - 0.2)
+        if biaohao == '-0.0':
+            cv.putText(coordinate, '0', (100 - 50, i * 100 + 100 + 10 + 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
+        else:
+            cv.putText(coordinate, biaohao, (100 - 50, i * 100 + 100 + 10), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
+
+    return coordinate
+
+def drow_spot(img,x,y,MAX_STEP):
+    # for i in range(x.shape[0]):
+
+    put_str='step:%d  loss:%.5f'%(x,y)
+    print(put_str)
+    img[120:180,500:830,:]=255
+    cv.putText(img, put_str,(500,150), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+    spot_x = int(x/MAX_STEP*1000+100)
+    spot_y =int(900-y*1000)
+    # print('画点位置：',spot_x,spot_y)
+    cv.circle(img,(spot_x,spot_y),3,(0,0,255),-1)
+
+
+
+    cv.imshow('LOSS',img)
+    cv.waitKey(10)
 
 
 def face_net(batch_size,height, width, n_classes,learning_rate):
@@ -145,22 +183,10 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
         cost=rmse,
     )
 
-def plot_durations(x,y):
-    plt.figure(1)
-    plt.clf()
-    # plt.subplot(111)
-    plt.plot(x, y, 'ro')
-    plt.xlim((0, MAX_STEP))
-    plt.ylim((0, 1))
-    plt.pause(0.001)  # 暂停一点，以便更新绘图
-    # if is_ipython:
-    #     display.clear_output(wait=True)           # 清除页面上的内容
-        # display.display(plt.gcf())
-
-
-
 
 def run_training(txt_name):
+    imgs = draw_form(MAX_STEP)
+
     logs_train_dir = './face72/face_0821/'
     X_data, Y_data = read_img(txt_name)
     graph= face_net(BATCH_SIZE, IMG_H,IMG_W, N_CLASSES,learning_rate)
@@ -176,7 +202,6 @@ def run_training(txt_name):
         saver.restore(sess, ckpt.model_checkpoint_path)
         print(global_step)
         y_step = int(float(global_step))
-
 
     loss_list ={}
     loss_list['x']=[]
@@ -202,9 +227,7 @@ def run_training(txt_name):
         loss_list['x'].append(step+y_step)
         loss_list['y'].append(avg_loss)
 
-        plot_durations(np.array(loss_list['x']), np.array(loss_list['y']))   #
-        # plt.plot(loss_list['x'],loss_list['y'],'ro')
-        # plt.draw()
+        drow_spot(imgs,step, avg_loss, MAX_STEP)
 
 
         print('次数：',step,'对应loss:',avg_loss)

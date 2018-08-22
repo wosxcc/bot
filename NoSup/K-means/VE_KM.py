@@ -11,7 +11,7 @@ while(1):
     xtime=datetime.datetime.now()
 
     imgs=cv.resize(img,(480,480),cv.INTER_CUBIC)
-    steps= 1
+    steps= 5
     sx=int(imgs.shape[1]/steps)
     sy=int(imgs.shape[0]/steps)
 
