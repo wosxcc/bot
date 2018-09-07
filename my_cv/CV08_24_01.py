@@ -17,7 +17,7 @@ class1='face'
 IMG_W = 480
 IMG_H = 480
 
-windows_name='E:/fujian/8.264'   # 视频文件位置
+windows_name='E:/BOT_Person/bot_face/222.mp4'   # 视频文件位置
 cap=cv.VideoCapture(windows_name)
 path='./train/'                                     # 文件保存位置
 img_copy=[]
@@ -47,38 +47,11 @@ def draw_circle(event,x,y,flags,param):
                 ix, iy = x, y
                 cv.imshow(windows_name, im_draw)
 
-    if event==cv.EVENT_LBUTTONUP:
-        # img_copy = np.copy(img)
-        x = max(x, 0)
-        y = max(y, 0)
-        x = min(x, img_copy.shape[1])
-        y = min(y, img_copy.shape[0])
-        mx=(rex + x) / 2.0
-        my=(rey + y) / 2.0
-        min_x = rex if (x > rex) else x
-        max_x = rex if (x < rex) else x
-        min_y = rey if (y > rey) else y
-        max_y = rey if (y < rey) else y
-        xwidth = abs(rex - x)
-        yheight = abs(rey - y)
-        if xwidth*yheight>=200:
-            # print('结束时的位置：rex,rey,x,y',mx,my,xwidth,yheight)
-            if mode == True:
-                nclass = 0# 如果是人类型是0
-            else:
-                nclass = 1
-            sum_init.append([nclass,mx,my,xwidth,yheight])
-            # cv.putText(img_copy, class0, (int(mx-xwidth/2), int(my-yheight/2)+20), cv.FONT_HERSHEY_SIMPLEX,1, (255, 0, 0),2)
-            cv.rectangle(img_copy, (int(mx-xwidth/2), int(my-yheight/2)), (int(mx+xwidth/2), int(my+yheight/2)), (255, 0, 0), 1)
-            # else:                                            # 如果是车类型是1
-            #     sum_init.append([1,mx,my,xwidth,yheight])
-            #     # cv.putText(img_copy, class1, (int(mx - xwidth / 2), int(my - yheight / 2)+20), cv.FONT_HERSHEY_SIMPLEX, 1,
-            #     #            (255, 0, 255), 2)
-            #     cv.rectangle(img_copy, (int(mx - xwidth / 2), int(my - yheight / 2)),
-            #                  (int(mx + xwidth / 2), int(my + yheight / 2)), (255, 0, 255), 1)
-            drawing=False
 count_c=0
-keep_num=int(len(os.listdir(path[0:-1]))/2)+87000
+keep_num=int(len(os.listdir(path[0:-1]))/2)+85000
+
+while (1):
+    cv.imshow(windows_name, img_copy)
 # keep_num=
 while(1):
     ret, img = cap.read()

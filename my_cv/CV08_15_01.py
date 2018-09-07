@@ -4,7 +4,7 @@ import time
 import datetime
 import math
 
-cap = cv2.VideoCapture('E:/BOT_Car/bot_car/test2.mp4')
+cap = cv2.VideoCapture('E:/BOT_Person/bot_face/111.mp4')
 
 kernelss=np.ones((2,2),np.uint8)
 
@@ -37,11 +37,13 @@ while (1):
     fgmask = fgbg.apply(frame)
     # fgmask = cv2.erode(fgmask, kernelss, iterations=1)
     # fgmask = cv2.erode(fgmask, kernelss, iterations=1)
-    ret, fgmask = cv2.threshold(fgmask, 20, 255, cv2.THRESH_BINARY)
+
+
+    ret, fgmask = cv2.threshold(fgmask, 20, 255, cv2.THRESH_BINARY) # 二值化
     fgmask = cv2.medianBlur(fgmask, 5)
     # fgmask = cv2.dilate(fgmask, kernelss, iterations=1)
     # fgmask = cv2.dilate(fgmask, kernelss, iterations=1)
-    fgmask =cv2.morphologyEx(fgmask,cv2.MORPH_OPEN,kernelss)
+    fgmask =cv2.morphologyEx(fgmask,cv2.MORPH_OPEN,kernelss)    #二值化
     ret, fgmask = cv2.threshold(fgmask, 20, 255, cv2.THRESH_BINARY)
     cv2.imshow('fgmask',fgmask)
     (_, cnts, _) = cv2.findContours(fgmask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  #寻找图像轮廓
@@ -68,7 +70,7 @@ while (1):
             (x, y, w, h) = (0, 0, 0, 0)
             continue
         else:
-            if Area < 300:
+            if Area < 10000:
                 (x, y, w, h) = (0, 0, 0, 0)
                 continue
             else:
@@ -142,7 +144,7 @@ while (1):
     print('耗时:', datetime.datetime.now() - xtime)
     cv2.imshow('frame', frame)
     # cv2.waitKey()
-    k = cv2.waitKey(30) & 0xff
+    k = cv2.waitKey(10) & 0xff
     if k == 27:
         break
 # out.release()

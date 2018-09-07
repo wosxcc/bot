@@ -30,7 +30,7 @@ from lib.utils.timer import Timer
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 CLASSES = ('__background__','person')
 
-NETS = {'vgg16': ('vgg16_faster_rcnn_iter_21400.ckpt',), 'res101': ('res101_faster_rcnn_iter_110000.ckpt',)} # vgg16_faster_rcnn_iter_70000.ckpt
+NETS = {'vgg16': ('vgg16_faster_rcnn_iter_38000.ckpt',), 'res101': ('res101_faster_rcnn_iter_110000.ckpt',)} # vgg16_faster_rcnn_iter_70000.ckpt
 DATASETS = {'pascal_voc': ('voc_2007_trainval',), 'pascal_voc_0712': ('voc_2007_trainval+voc_2012_trainval',)}
 
 
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     demonet = args.demo_net
     dataset = args.dataset
     tfmodel = os.path.join('./default', demonet, DATASETS[dataset][0], 'default', NETS[demonet][0])
-    tfmodel='./output/vgg16_faster_rcnn_iter_35200.ckpt'
+    tfmodel='./output/vgg16_faster_rcnn_iter_38000.ckpt'
     print(tfmodel + '.meta')
     if not os.path.isfile(tfmodel + '.meta'):
         print(tfmodel)

@@ -5,8 +5,8 @@ import  os
 count=0
 
 file_path='E:/BOT_Person/trainb480'
-file_path='E:/BOT_Car/train'
-
+file_path='E:/Danger_car/train'
+file_path='E:/Desk_Set/train'
 test_txt = open(file_path+'.txt', 'w')
 # train_txt = open('E:/COCO/train.txt', 'w')
 for file_name in os.listdir(file_path):

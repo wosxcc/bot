@@ -4,7 +4,7 @@ import cv2 as cv
 import numpy as np
 import  math
 import  os
-import sys
+
 
 drawing=False
 mode=True
@@ -13,13 +13,11 @@ rex,rey=-1,-1           # 初始化位置
 
 class0='hand'
 class1='face'
-
 IMG_W = 480
 IMG_H = 480
 
-windows_name='E:/fujian/8.264'   # 视频文件位置
-cap=cv.VideoCapture(windows_name)
-path='./train/'                                     # 文件保存位置
+windows_name='E:/Car_Person'                      # 读取文件位置
+path='E:/Car_Person2/'                                      # 文件保存位置
 img_copy=[]
 sum_init=[]
 
@@ -34,14 +32,14 @@ def draw_circle(event,x,y,flags,param):
         if drawing ==True:
             if mode==True:
                 im_draw = np.copy(img_copy)
-                # cv.putText(im_draw, class0, (rex, rey+20),  cv.FONT_HERSHEY_SIMPLEX, 1,(255, 0, 0),2)
+                cv.putText(im_draw, class0, (rex, rey+20),  cv.FONT_HERSHEY_SIMPLEX, 1,(255, 0, 0),2)
                 cv.line(im_draw, (rex, rey), (x, y), (0, 255, 255), 2)
                 cv.rectangle(im_draw, (rex, rey), (x, y), (255, 0, 0), 2)
                 ix, iy = x, y
                 cv.imshow(windows_name, im_draw)
             else:
                 im_draw = np.copy(img_copy)
-                # cv.putText(im_draw,class1,(rex, rey+20),cv.FONT_HERSHEY_SIMPLEX,1,(255, 0, 255),2)
+                cv.putText(im_draw,class1,(rex, rey+20),cv.FONT_HERSHEY_SIMPLEX,1,(255, 0, 255),2)
                 cv.line(im_draw, (rex, rey), (x, y), (0, 255, 255), 2)
                 cv.rectangle(im_draw, (rex, rey), (x, y), (255, 0, 255), 2)
                 ix, iy = x, y
@@ -62,32 +60,55 @@ def draw_circle(event,x,y,flags,param):
         xwidth = abs(rex - x)
         yheight = abs(rey - y)
         if xwidth*yheight>=200:
+            print('输出框的位置宽高', x, y, xwidth, yheight)
             # print('结束时的位置：rex,rey,x,y',mx,my,xwidth,yheight)
-            if mode == True:
-                nclass = 0# 如果是人类型是0
-            else:
-                nclass = 1
-            sum_init.append([nclass,mx,my,xwidth,yheight])
-            # cv.putText(img_copy, class0, (int(mx-xwidth/2), int(my-yheight/2)+20), cv.FONT_HERSHEY_SIMPLEX,1, (255, 0, 0),2)
-            cv.rectangle(img_copy, (int(mx-xwidth/2), int(my-yheight/2)), (int(mx+xwidth/2), int(my+yheight/2)), (255, 0, 0), 1)
-            # else:                                            # 如果是车类型是1
-            #     sum_init.append([1,mx,my,xwidth,yheight])
-            #     # cv.putText(img_copy, class1, (int(mx - xwidth / 2), int(my - yheight / 2)+20), cv.FONT_HERSHEY_SIMPLEX, 1,
-            #     #            (255, 0, 255), 2)
-            #     cv.rectangle(img_copy, (int(mx - xwidth / 2), int(my - yheight / 2)),
-            #                  (int(mx + xwidth / 2), int(my + yheight / 2)), (255, 0, 255), 1)
+            if mode == True:                                # 如果是人类型是0
+                sum_init.append([1,mx,my,xwidth,yheight])
+                # cv.putText(img_copy, class0, (int(mx-xwidth/2), int(my-yheight/2)+20), cv.FONT_HERSHEY_SIMPLEX,1, (255, 0, 0),2)
+                cv.rectangle(img_copy, (int(mx-xwidth/2), int(my-yheight/2)), (int(mx+xwidth/2), int(my+yheight/2)), (0, 255, 255), 1)
+            else:                                            # 如果是车类型是1
+                sum_init.append([0,mx,my,xwidth,yheight])
+                # cv.putText(img_copy, class1, (int(mx - xwidth / 2), int(my - yheight / 2)+20), cv.FONT_HERSHEY_SIMPLEX, 1,
+                #            (255, 0, 255), 2)
+                cv.rectangle(img_copy, (int(mx - xwidth / 2), int(my - yheight / 2)),
+                             (int(mx + xwidth / 2), int(my + yheight / 2)), (255, 0, 0), )
             drawing=False
 count_c=0
-keep_num=int(len(os.listdir(path[0:-1]))/2)+87000
+keep_num=int(len(os.listdir(path[0:-1]))/2)+10001
 # keep_num=
-while(1):
-    ret, img = cap.read()
-    count_c += 1
-    print(count_c)
-    if count_c > 0: #21250
-        img=cv.resize(img,(1000,800),cv.INTER_CUBIC)
+for file in os.listdir(windows_name):
+    if file[-4:]=='.jpg' and file[:-4]=='11094':
+        txt_open = open(windows_name+'/'+file[:-4]+'.txt')
+        txt_read = txt_open.read()
+        print(windows_name+'/'+file)
+        img = cv.imread(windows_name+'/'+file)
+        img=cv.resize(img,(960,960), interpolation=cv.INTER_CUBIC)
+        # imga = cv.imread(windows_name+'/'+file[:-6]+'a.jpeg')
+        # cv.imshow('image_a',imga)
+
+        for bbox in txt_read.split('\n'):
+            box = bbox.split(' ')
+            if len(box) == 5:
+                box = [float(i) for i in box]
+                if box[0] == 0:
+                    img = cv.rectangle(img, (
+                    int((box[1] - box[3] / 2) * img.shape[1]), int((box[2] - box[4] / 2) * img.shape[0])), (
+                                       int((box[1] + box[3] / 2) * img.shape[1]),
+                                       int((box[2] + box[4] / 2) * img.shape[0])), (255, 0, 0), 2)
+                else:
+                    img = cv.rectangle(img, (
+                    int((box[1] - box[3] / 2) * img.shape[1]), int((box[2] - box[4] / 2) * img.shape[0])), (
+                                       int((box[1] + box[3] / 2) * img.shape[1]),
+                                       int((box[2] + box[4] / 2) * img.shape[0])), (0, 255, 255), 2)
+                img = cv.circle(img, (int((box[1]) * img.shape[1]), int((box[2] - box[4] / 2) * img.shape[0])), 2,
+                                (255, 0, 255), -1)
+
+
         img_copy = np.copy(img)
 
+
+
+        count_c+=1
         # if count_c%3==0:
         cv.namedWindow(windows_name)
         cv.setMouseCallback(windows_name,draw_circle)
@@ -95,22 +116,20 @@ while(1):
         mode = True
         while(1):
             cv.imshow(windows_name, img_copy)
-
             k=cv.waitKey(0)&0xFF
-
             if k==ord('c'): # c转换类型
                 print('转换成功')
                 mode=not mode
                 cv.imshow(windows_name, img_copy)
             elif k==ord('s'):       # s保存
                 if len(sum_init)>0:
-                    creat_name=str(keep_num)
-                    for i in range(int(5-len(creat_name))):
-                        creat_name='0'+creat_name
-                    imgs =cv.resize(img, (IMG_W,IMG_H), interpolation=cv.INTER_CUBIC)
-                    cv.imwrite(path+creat_name+'.jpg',imgs)
-                    write_txt = open(path+creat_name+'.txt', 'w')
-                    output_txt=''
+                    # creat_name=str(keep_num)
+                    # for i in range(int(5-len(creat_name))):
+                    #     creat_name='0'+creat_name
+                    imgs = cv.resize(img, (IMG_W, IMG_H), interpolation=cv.INTER_CUBIC)
+                    # cv.imwrite(path+file[:-4]+'.jpg',imgs)
+                    write_txt = open(path+file[:-4]+'.txt', 'w')
+                    output_txt=txt_read
                     for bbox in sum_init:
                         output_txt+=str(bbox[0])+' '+str(bbox[1]/img.shape[1])+' '+str(bbox[2]/img.shape[0])+' '+str(bbox[3]/img.shape[1])+' '+str(bbox[4]/img.shape[0])+'\n'
                     write_txt.write(output_txt)
@@ -128,9 +147,7 @@ while(1):
                                      (int(sline[1] + sline[3] / 2), int(sline[2] + sline[4] / 2)), (255, 0, 0), 1)
             elif k == ord('d'):             # 清屏
                 img_copy = np.copy(img)
-                sum_init = []
-            elif k == 27:
-                sys.exit()
+                sum_init=[]
             elif k==32:  # 空格跳到下一帧
                 break
 cv.destroyAllWindows()
