@@ -7,38 +7,36 @@ def connection_create(HOST,PORT):
         return 0
     return asocket
 
-def send_request(asocket):
-    while 1:
-        cmd=input("输入cmd命令:")
-        print('命令为：',cmd)
-        try:
-            asocket.sendall(str(cmd).encode("utf-8"))
-            data = asocket.recv(200000)
-        except socket.error as e:
-            print('连接已中断')
-            return 0
+def send_request(asocket,cmd):
+    print('命令为：',cmd)
+    try:
+        asocket.sendall(str(cmd).encode("utf-8"))
+        data = asocket.recv(200000)
+    except socket.error as e:
+        print('连接已中断')
+        return 0
 
-        sdata = str(data, encoding="utf8")
-        print(sdata[:5000])
-        asocket.close()
+    sdata = str(data, encoding="utf8")
+    print(sdata[:5000])
+    asocket.close()
 
 if __name__=="__main__":
     HOST = '127.0.0.1'
     PORT = 8000
-
-    for i in range(16):
-        astock = connection_create(HOST,PORT)
-        if astock!=0:
+    while True:
+        cmd = input("输入cmd命令:")
+        if cmd == 'exit':
             break
+        for i in range(16):
+            astock = connection_create(HOST,PORT)
+            if astock!=0:
+                break
+            else:
+                if(i%3==0):
+                    print('无法连接到服务')
+        if astock!=0:
+            print('已连接服务')
+            send_request(astock,cmd)
+
         else:
-            if(i%3==0):
-                print('无法连接到服务')
-    if astock!=0:
-        print('已连接服务')
-        send_request(astock)
-
-    else:
-        print('请检查服务是否开启')
-
-
-
+            print('请检查服务是否开启')
