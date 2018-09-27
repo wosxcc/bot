@@ -206,7 +206,7 @@ CAPACITY = 64
 MAX_STEP = 332000
 learning_rate = 0.000000001
 N_CLASSES = 30
-run_training(txt_name)
+# run_training(txt_name)
 
 
 #
@@ -231,8 +231,8 @@ def val(test_file):
         image = tf.cast(image_arr, tf.float32)
         image = tf.image.per_image_standardization(image)  ###归一化操作
         image = tf.reshape(image, [1, IMG_W, IMG_H, 3])
-        op_intp = np.zeros(N_CLASSES, np.float32)
-        ydata  = face_net(image, op_intp, 1, N_CLASSES)['y_data']
+        op_intp = np.zeros((1,N_CLASSES), np.float32)
+        ydata  = face_net(image, op_intp, 1, N_CLASSES,learning_rate)['y_data']
         # print('看看p的值：',p)
         logits = ydata  # tf.nn.softmax(p)
         x = tf.placeholder(tf.float32, shape=[IMG_W, IMG_H, 3])

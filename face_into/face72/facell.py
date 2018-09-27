@@ -118,10 +118,8 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
         weights2 = weight_variable([300, n_classes])
         biases2 = bias_variable([n_classes])
         y_conv = tf.add(tf.matmul(fc1, weights2), biases2, name="output")
-
     rmse = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y))
     # rmse = tf.sqrt(tf.reduce_mean(tf.square( y - y_conv)))
-
     with tf.variable_scope('costs'):
         cost =tf.reduce_mean(rmse,name='rmse')
         costs = []
@@ -130,7 +128,6 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
                 costs.append(tf.nn.l2_loss(var))
         if len(costs)>0:
             cost +=tf.multiply(0.0002,tf.add_n(costs))
-
     with tf.name_scope("optimizer"):
         optimize = tf.train.AdamOptimizer(learning_rate=learning_rate)
         global_step = tf.Variable(0, name="global_step", trainable=False)
@@ -145,7 +142,7 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
 
 
 def run_training(txt_name):
-    logs_train_dir = './face72/facell/'
+    logs_train_dir = './face72/facelc/'
     X_data, Y_data = read_img(txt_name)
     graph= face_net(BATCH_SIZE, IMG_H,IMG_W, N_CLASSES,learning_rate)
     sess = tf.Session()
@@ -157,25 +154,25 @@ def run_training(txt_name):
         saver.restore(sess, ckpt.model_checkpoint_path)
 
     for step in np.arange(MAX_STEP):
-        for i in range(BATCH_SIZE):
-            xb= (step%664)*16+i
+        # for i in range(BATCH_SIZE):
+        #     xb= (step%664)*16+i
             # ximage=np.array(X_data[xb]*255, dtype='uint8')
             # for xxi in range(72):
             #     cv.circle(ximage,(int(Y_data[xb][2+2*xxi]*96),int(Y_data[xb][2+2*xxi+1]*96)),2,(0, 255, 255), -1)
             # cv.imshow('ximage',ximage)
             # cv.waitKey()
-
-            _ ,tra_loss= sess.run([graph['optimize'],graph['cost']],feed_dict={
-                        graph['x']: np.reshape(X_data[xb], (1, 96, 96, 3)),
-                        graph['y']: np.reshape(Y_data[xb], (1, 30))})
-
+        # print('看你一眼你会怀孕么',(step%664)*16,(step%664)*16+16)
+        #
+        # print('你还真的怀孕了啊',X_data[(step%664)*16:(step%664)*16+16].shape)
+        _ ,tra_loss= sess.run([graph['optimize'],graph['cost']],feed_dict={
+                    graph['x']: np.reshape(X_data[(step%664)*16:(step%664)*16+16], (16, 96, 96, 3)),
+                    graph['y']: np.reshape(Y_data[(step%664)*16:(step%664)*16+16], (16, 30))})
         if step % 50 == 0:
             print('Step %d,train loss = %.5f' % (step, tra_loss))
             constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
                                                                        ['output/output'])
             with tf.gfile.FastGFile(logs_train_dir + 'face72.pb', mode='wb') as f:
                 f.write(constant_graph.SerializeToString())
-
 
             # 每迭代50次，打印出一次结果
             # summary_str = sess.run(summary_op)
@@ -195,7 +192,7 @@ IMG_H = 96
 BATCH_SIZE = 16
 CAPACITY = 16
 MAX_STEP = 6000
-learning_rate = 0.0001
+learning_rate = 0.00001
 N_CLASSES = 30
 run_training(txt_name)
 

@@ -246,7 +246,7 @@ CAPACITY = 64
 MAX_STEP = 1000000
 learning_rate = 0.00001
 N_CLASSES = 30
-run_training(txt_name,BATCH_SIZE,N_CLASSES)
+# run_training(txt_name,BATCH_SIZE,N_CLASSES)
 
 
 

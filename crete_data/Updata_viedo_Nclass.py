@@ -14,8 +14,8 @@ nclass =['显示器', '键盘', '鼠标', '笔记本电脑', '电话', '打印�
 IMG_W = 800
 IMG_H = 800
 now_class = 0
-windows_name='E:/Desk_Set/8.mp4'   # 文件位置E:\Desk_Set
-path='./zzz/'                                     # 文件保存位置
+windows_name='E:/Desk_Set/16.mp4'   # 文件位置E:\Desk_Set
+path='./ccccc/'                                     # 文件保存位置
 img_copy=[]
 sum_init=[]
 
@@ -73,7 +73,7 @@ def draw_circle(event,x,y,flags,param):
 count_c=0
 
 cap=cv.VideoCapture(windows_name)
-keep_num=int(len(os.listdir(path[0:-1]))/2)+510
+keep_num=int(len(os.listdir(path[0:-1]))/2)+670
 # keep_num=
 while(1):
     ret, img = cap.read()

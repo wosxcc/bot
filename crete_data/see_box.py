@@ -5,10 +5,11 @@ import cv2 as cv
 
 # paths='E:/BOT_Person/trainb'
 paths='E:/BOT_Car/train'
-paths='./zzz'
+paths='E:/Desk_Set/train'
+# paths = 'ccccc'
 # paths='./train'   ['00037','53']
 for file in os.listdir(paths):
-    if file[-4:]=='.jpg' : ## and file[:-4]>'00500' and file[:-4]>'E:/BOT_Person/trainb/000000480594.jpg' and file[:-4]>'000000480591'  and file[:-4]>'84000'
+    if file[-4:]=='.jpg' and file[:-4]>'00500': ## and file[:-4]>'00500' and file[:-4]>'E:/BOT_Person/trainb/000000480594.jpg' and file[:-4]>'000000480591'  and file[:-4]>'84000'
         new_box=''
         new_txt =open(paths+'/'+file[:-4]+'.txt')
         old_data = new_txt.read()

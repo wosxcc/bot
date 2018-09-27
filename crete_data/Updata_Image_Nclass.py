@@ -14,8 +14,8 @@ nclass =['显示器', '键盘', '鼠标', '笔记本电脑', '电话', '打印�
 IMG_W = 800
 IMG_H = 800
 now_class = 0
-windows_name='./ccccc'   # 文件位置E:\Desk_Set
-path='./yyyyy/'                                     # 文件保存位置
+windows_name='./ccccc/'   # 文件位置E:\Desk_Set
+path='./yy22/'                                     # 文件保存位置
 img_copy=[]
 sum_init=[]
 
@@ -71,7 +71,7 @@ def draw_circle(event,x,y,flags,param):
             cv.rectangle(img_copy, (int(mx-xwidth/2), int(my-yheight/2)), (int(mx+xwidth/2), int(my+yheight/2)), (color_b, color_g, color_r), 1)
             drawing=False
 count_c=0
-keep_num=int(len(os.listdir(path[0:-1]))/2)+1
+keep_num=int(len(os.listdir(path[0:-1]))/2)+620
 # keep_num=
 for file in os.listdir(windows_name):
     if file[-4:] == '.jpg':
@@ -82,7 +82,7 @@ for file in os.listdir(windows_name):
             txt_read = txt_open.read()
         print(windows_name + '/' + file)
         img = cv.imread(windows_name+'/'+file)
-        img=cv.resize(img,(1000,1000), interpolation=cv.INTER_CUBIC)
+        img=cv.resize(img,(1500,960), interpolation=cv.INTER_CUBIC)
         # imga = cv.imread(windows_name+'/'+file[:-6]+'a.jpeg')
         # cv.imshow('image_a',imga)
         img_copy = np.copy(img)

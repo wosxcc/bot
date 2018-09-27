@@ -73,102 +73,91 @@ def get_batch(image_lines,img_W,img_H,batch_size,capacity):
     negative_batch = tf.cast(negative_batch, tf.float32)
     positive_batch = tf.cast(positive_batch, tf.float32)
     anchor_batch = tf.cast(anchor_batch, tf.float32)
-    # img_batch = tf.cast(img_batch, tf.float32)
 
     return anchor_batch,positive_batch,negative_batch,lab_batch
 
 
-def face_net(images,lab_data,batch_size, n_classes):
-    print(images)
-    with tf.variable_scope('conv1') as scope:
-
-        W1 = tf.get_variable('weights1', shape=(3, 3, 3, 32), dtype=tf.float32,initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
-        print('去年买表', W1)
-        b1 = tf.get_variable('biases1', shape=[32], dtype=tf.float32
+def face_net(images,xname,lab_data,batch_size, n_classes):
+    with tf.variable_scope(xname+'conv1') as scope:
+        W1 = tf.get_variable(xname+'weights1', shape=(3, 3, 3, 32), dtype=tf.float32,initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
+        b1 = tf.get_variable(xname+'biases1', shape=[32], dtype=tf.float32
                              , initializer=tf.constant_initializer(0.1))
         conv = tf.nn.conv2d(images, W1, strides=[1, 1, 1, 1], padding="SAME")
         pre_activation = tf.nn.bias_add(conv, b1)
-        relu1 = tf.nn.relu(pre_activation, name="relu1")
+        relu1 = tf.nn.relu(pre_activation, name=xname+"relu1")
 
-
-    with tf.variable_scope('conv2') as scope:
-        W2 = tf.get_variable('weights2', shape=(3, 3, 32, 64), dtype=tf.float32,
+    with tf.variable_scope(xname+'conv2') as scope:
+        W2 = tf.get_variable(xname+'weights2', shape=(3, 3, 32, 64), dtype=tf.float32,
                              initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
-        b2 = tf.get_variable('biases2', shape=[64], dtype=tf.float32
+        b2 = tf.get_variable(xname+'biases2', shape=[64], dtype=tf.float32
                              , initializer=tf.constant_initializer(0.1))
         conv2 = tf.nn.conv2d(relu1, W2, strides=[1, 2, 2, 1], padding='SAME')
-        relu2 = tf.nn.relu(tf.nn.bias_add(conv2, b2), name='relu2')
+        relu2 = tf.nn.relu(tf.nn.bias_add(conv2, b2), name=xname+'relu2')
 
-
-    with tf.variable_scope('conv3') as scope:
-        W3 = tf.get_variable('weights3', shape=(3, 3, 64, 128), dtype=tf.float32,
+    with tf.variable_scope(xname+'conv3') as scope:
+        W3 = tf.get_variable(xname+'weights3', shape=(3, 3, 64, 128), dtype=tf.float32,
                              initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
-        b3 = tf.get_variable('biases3', shape=[128], dtype=tf.float32
+        b3 = tf.get_variable(xname+'biases3', shape=[128], dtype=tf.float32
                              , initializer=tf.constant_initializer(0.1))
         conv3 = tf.nn.conv2d(relu2, W3, strides=[1, 1, 1, 1], padding='SAME')
-        relu3 = tf.nn.relu(tf.nn.bias_add(conv3, b3), name='relu3')
+        relu3 = tf.nn.relu(tf.nn.bias_add(conv3, b3), name=xname+'relu3')
 
-
-    with tf.variable_scope('conv4') as scope:
-        W4 = tf.get_variable('weights4', shape=(3, 3, 128, 256), dtype=tf.float32,
+    with tf.variable_scope(xname+'conv4') as scope:
+        W4 = tf.get_variable(xname+'weights4', shape=(3, 3, 128, 256), dtype=tf.float32,
                              initializer=tf.truncated_normal_initializer(stddev=0.1, dtype=tf.float32))
-        b4 = tf.get_variable('biases4', shape=[256], dtype=tf.float32
+        b4 = tf.get_variable(xname+'biases4', shape=[256], dtype=tf.float32
                              , initializer=tf.constant_initializer(0.1))
         conv4 = tf.nn.conv2d(relu3, W4, strides=[1, 2, 2, 1], padding='SAME')
-        relu4 = tf.nn.relu(tf.nn.bias_add(conv4, b4), name='relu4')
+        relu4 = tf.nn.relu(tf.nn.bias_add(conv4, b4), name=xname+'relu4')
 
-
-    with tf.variable_scope('conv5') as scope:
-        W5 = tf.get_variable('weights5', shape=(3, 3, 256, 512), dtype=tf.float32,
+    with tf.variable_scope(xname+'conv5') as scope:
+        W5 = tf.get_variable(xname+'weights5', shape=(3, 3, 256, 512), dtype=tf.float32,
                              initializer=tf.truncated_normal_initializer(stddev=0.05, dtype=tf.float32))
-        b5 = tf.get_variable('biases5', shape=[512], dtype=tf.float32
+        b5 = tf.get_variable(xname+'biases5', shape=[512], dtype=tf.float32
                              , initializer=tf.constant_initializer(0.1))
         conv5 = tf.nn.conv2d(relu4, W5, strides=[1, 1, 1, 1], padding='SAME')
-        relu5 = tf.nn.relu(tf.nn.bias_add(conv5, b5), name='relu5')
+        relu5 = tf.nn.relu(tf.nn.bias_add(conv5, b5), name=xname+'relu5')
 
-
-    with tf.variable_scope('conv6') as scope:
-        W6 = tf.get_variable('weights6', shape=(3, 3, 512, 256), dtype=tf.float32,
+    with tf.variable_scope(xname+'conv6') as scope:
+        W6 = tf.get_variable(xname+'weights6', shape=(3, 3, 512, 256), dtype=tf.float32,
                              initializer=tf.truncated_normal_initializer(stddev=0.01, dtype=tf.float32))
-        b6 = tf.get_variable('biases6', shape=[256], dtype=tf.float32
+        b6 = tf.get_variable(xname+'biases6', shape=[256], dtype=tf.float32
                              , initializer=tf.constant_initializer(0.1))
         conv6 = tf.nn.conv2d(relu5, W6, strides=[1, 2, 2, 1], padding='SAME')
-        relu6 = tf.nn.relu(tf.nn.bias_add(conv6, b6), name='relu6')
+        relu6 = tf.nn.relu(tf.nn.bias_add(conv6, b6), name=xname+'relu6')
 
-
-    with tf.variable_scope('conv7') as scope:
-        W7 = tf.get_variable('weights7', shape=(3, 3, 256, 128), dtype=tf.float32,
+    with tf.variable_scope(xname+'conv7') as scope:
+        W7 = tf.get_variable(xname+'weights7', shape=(3, 3, 256, 128), dtype=tf.float32,
                              initializer=tf.truncated_normal_initializer(stddev=0.005, dtype=tf.float32))
-        b7= tf.get_variable('biases7', shape=[128], dtype=tf.float32
+        b7= tf.get_variable(xname+'biases7', shape=[128], dtype=tf.float32
                              , initializer=tf.constant_initializer(0.1))
         conv7 = tf.nn.conv2d(relu6, W7, strides=[1, 1, 1, 1], padding='SAME')
-        relu7 = tf.nn.relu(tf.nn.bias_add(conv7, b7), name='relu7')
-
+        relu7 = tf.nn.relu(tf.nn.bias_add(conv7, b7), name=xname+'relu7')
         # 全连接层
-    with tf.variable_scope("fc1") as scope:
+    with tf.variable_scope(xname+"fc1") as scope:
         reshape = tf.reshape(relu7, shape=[batch_size, -1])
         # print('reshape',reshape)
         dim = reshape.get_shape()[1].value
-        weights = tf.get_variable("weights",
+        weights = tf.get_variable(xname+"weights",
                                   shape=[dim, 256],
                                   dtype=tf.float32,
                                   initializer=tf.truncated_normal_initializer(stddev=0.005, dtype=tf.float32))
-        biases = tf.get_variable("biases",
+        biases = tf.get_variable(xname+"biases",
                                  shape=[256],
                                  dtype=tf.float32,
                                  initializer=tf.constant_initializer(0.1))
-        fc1 = tf.nn.relu(tf.matmul(reshape, weights) + biases, name="fc1")
+        fc1 = tf.nn.relu(tf.matmul(reshape, weights) + biases, name=xname+"fc1")
 
-    with tf.variable_scope("softmax_linear") as scope:
-        weights = tf.get_variable("weights",
+    with tf.variable_scope(xname+"softmax_linear") as scope:
+        weights = tf.get_variable(xname+"weights",
                                   shape=[256, n_classes],
                                   dtype=tf.float32,
                                   initializer=tf.truncated_normal_initializer(stddev=0.005, dtype=tf.float32))
-        biases = tf.get_variable("biases",
+        biases = tf.get_variable(xname+"biases",
                                  shape=[n_classes],
                                  dtype=tf.float32,
                                  initializer=tf.constant_initializer(0.1))
-        y_conv = tf.add(tf.matmul(fc1, weights), biases, name="softmax_linear")
+        y_conv = tf.add(tf.matmul(fc1, weights), biases, name=xname+"softmax_linear")
     return y_conv
 
 def trainning(loss, learning_rate):
@@ -189,9 +178,9 @@ def run_training(txt_name):
                                               BATCH_SIZE,
                                               CAPACITY)
 
-    anchor_output = face_net(anchor_batch, train_into_batch, BATCH_SIZE, N_CLASSES)
-    positive_output = face_net(positive_batch, train_into_batch, BATCH_SIZE, N_CLASSES)
-    negative_output = face_net(negative_batch, train_into_batch, BATCH_SIZE, N_CLASSES)
+    anchor_output = face_net(anchor_batch,'anchor', train_into_batch, BATCH_SIZE, N_CLASSES)
+    positive_output = face_net(positive_batch, 'positive', train_into_batch, BATCH_SIZE, N_CLASSES)
+    negative_output = face_net(negative_batch, 'negative', train_into_batch, BATCH_SIZE, N_CLASSES)
 
     d_pos = tf.reduce_sum(tf.square(anchor_output - positive_output), 1)
     d_neg = tf.reduce_sum(tf.square(anchor_output - negative_output), 1)
@@ -244,8 +233,8 @@ txt_name= 'trainc.txt'
 IMG_W = 64
 IMG_H = 64
 margin =20.0
-BATCH_SIZE=32
-CAPACITY = 32
+BATCH_SIZE=16
+CAPACITY = 16
 MAX_STEP = 10000000
 learning_rate = 0.0001
 N_CLASSES = 128

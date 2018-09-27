@@ -3,7 +3,7 @@ import cv2 as cv
 import numpy as np
 import tensorflow as tf
 import datetime
-
+from tensorflow.python.framework import graph_util
 
 label_lines = []
 image_lines = []
@@ -207,6 +207,11 @@ def run_training(txt_name):
                 train_writer.add_summary(summary_str, step)
 
             if step % 200 == 0 or (step + 1) == MAX_STEP:
+                constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
+                                                                           ['output/output'])
+                with tf.gfile.FastGFile(logs_train_dir + 'face72.pb', mode='wb') as f:
+                    f.write(constant_graph.SerializeToString())
+
                 checkpoint_path = os.path.join(logs_train_dir, 'model.ckpt')
                 saver.save(sess, checkpoint_path, global_step=step)
                 # 每迭代200次，利用saver.save()保存一次模型文件，以便测试的时候使用
@@ -230,7 +235,7 @@ CAPACITY = 32
 MAX_STEP = 10000000
 learning_rate = 0.000001
 N_CLASSES = 146
-run_training(txt_name)
+# run_training(txt_name)
 
 
 

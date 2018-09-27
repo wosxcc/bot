@@ -5,13 +5,16 @@ import cv2 as cv
 import datetime
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 def recognize(jpg_path, pb_file_path,img_w,img_h):
     with tf.Graph().as_default():
         output_graph_def = tf.GraphDef()
 
         with open(pb_file_path, "rb") as f:
             output_graph_def.ParseFromString(f.read())
+            print(str(output_graph_def)[:5000])
+
+            print(str(output_graph_def)[5000:])
             _ = tf.import_graph_def(output_graph_def, name="")
 
         with tf.Session() as sess:
@@ -35,7 +38,7 @@ def recognize(jpg_path, pb_file_path,img_w,img_h):
 
                 start_time =datetime.datetime.now()
                 img_out_softmax = sess.run(out_softmax, feed_dict={input_x:np.reshape(ximg, [-1, img_w,img_h, 3])})
-                # print(img_out_softmax)
+                print(img_out_softmax)
                 print('耗时：',datetime.datetime.now()-start_time)
                 img = cv.resize(img, (480, 480), interpolation=cv.INTER_CUBIC)
                 img_out_softmax=img_out_softmax.reshape(1,-1)
