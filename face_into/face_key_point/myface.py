@@ -6,7 +6,7 @@ import datetime
 import random
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.framework import graph_util
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 label_lines = []
 image_lines = []
 def read_img(txt_name):
@@ -26,7 +26,6 @@ def read_img(txt_name):
             a_label = [float(i) for i in line_list[1:]]
             a_label[0] = a_label[0]/2
             a_label = np.array(a_label,dtype='float32')
-            a_label = (a_label-0.5)*2.0
             # print(a_label)
             label_lines.append(a_label)
 
@@ -87,33 +86,10 @@ def drow_spot(img,x,y,MAX_STEP):
     cv.waitKey(10)
 
 
-def face_net(batch_size,height, width, n_classes,learning_rate,phase_train):
+def face_net(batch_size,height, width, n_classes,learning_rate):
     print(batch_size,height, width, n_classes,learning_rate)
     x = tf.placeholder(tf.float32, shape=[None, height, width, 3], name='input')
     y = tf.placeholder(tf.float32, shape=[None, n_classes], name='labels')
-
-    def batch_norm(x, phase_train):  # pylint: disable=unused-variable
-        name = 'batch_norm'
-        with tf.variable_scope(name):
-            phase_train = tf.convert_to_tensor(phase_train, dtype=tf.bool)
-            n_out = int(x.get_shape()[-1])
-            beta = tf.Variable(tf.constant(0.0, shape=[n_out], dtype=x.dtype),
-                               name=name + '/beta', trainable=True, dtype=x.dtype)
-            gamma = tf.Variable(tf.constant(1.0, shape=[n_out], dtype=x.dtype),
-                                name=name + '/gamma', trainable=True, dtype=x.dtype)
-
-            batch_mean, batch_var = tf.nn.moments(x, [0], name='moments')
-            ema = tf.train.ExponentialMovingAverage(decay=0.9)
-            def mean_var_with_update():
-                ema_apply_op = ema.apply([batch_mean, batch_var])
-                with tf.control_dependencies([ema_apply_op]):
-                    return tf.identity(batch_mean), tf.identity(batch_var)
-
-            mean, var = control_flow_ops.cond(phase_train,
-                                              mean_var_with_update,
-                                              lambda: (ema.average(batch_mean), ema.average(batch_var)))
-            normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
-        return normed
 
     def weight_variable(shape,name='weight'):
         initial = tf.truncated_normal_initializer(stddev=0.005,dtype=tf.float32)
@@ -127,54 +103,60 @@ def face_net(batch_size,height, width, n_classes,learning_rate,phase_train):
         W1 = weight_variable([7, 7, 3, 32])
         b1 = bias_variable([32])
         conv = tf.nn.conv2d(x, W1, strides=[1, 1, 1, 1], padding="SAME")
-        pre_activation = tf.nn.relu(tf.nn.bias_add(conv, b1),name='sigm1')
-        relu1 =  batch_norm(pre_activation, phase_train)
+        relu1 = tf.nn.relu(tf.nn.bias_add(conv, b1),name='sigm1')
+        # relu1 = (pre_activation-tf.reduce_min(pre_activation))/tf.reduce_max(pre_activation)
 
     with tf.variable_scope('conv2') as scope:
         W2 = weight_variable([5, 5, 32, 64])
         b2 = bias_variable([64])
         conv2 = tf.nn.conv2d(relu1, W2, strides=[1, 2, 2, 1], padding='SAME')
-        relu2 = batch_norm(tf.nn.relu(tf.nn.bias_add(conv2, b2),name='sigm2'), phase_train)
-
+        relu2 = tf.nn.relu(tf.nn.bias_add(conv2, b2),name='sigm2')
+        # relu2 = (xrelu2-tf.reduce_min(xrelu2))/tf.reduce_max(xrelu2)
 
 
     with tf.variable_scope('conv3') as scope:
         W3 = weight_variable([5, 5, 64, 128])
         b3 = bias_variable([128])
         conv3 = tf.nn.conv2d(relu2, W3, strides=[1, 1, 1, 1], padding='SAME')
-        relu3 = batch_norm(tf.nn.relu(tf.nn.bias_add(conv3, b3),name='sigm3'), phase_train)
+        relu3 =tf.nn.relu(tf.nn.bias_add(conv3, b3),name='sigm3')
+        #relu3=(xrelu3-tf.reduce_min(xrelu3))/tf.reduce_max(xrelu3)
 
     with tf.variable_scope('conv4') as scope:
         W4 = weight_variable([3, 3, 128, 256])
         b4 = bias_variable([256])
         conv4 = tf.nn.conv2d(relu3, W4, strides=[1, 2, 2, 1], padding='SAME')
-        relu4 = batch_norm(tf.nn.relu(tf.nn.bias_add(conv4, b4),name='sigm4'), phase_train)
+        relu4 = tf.nn.relu(tf.nn.bias_add(conv4, b4),name='sigm4')
+        # relu4 = (xrelu4 - tf.reduce_min(xrelu4)) / tf.reduce_max(xrelu4)
 
 
     with tf.variable_scope('conv5') as scope:
         W5 = weight_variable([3, 3, 256, 256])
         b5 = bias_variable([256])
         conv5 = tf.nn.conv2d(relu4, W5, strides=[1, 1, 1, 1], padding='SAME')
-        relu5 = batch_norm(tf.nn.relu(tf.nn.bias_add(conv5, b5),name='sigm5'), phase_train)
+        relu5 = tf.nn.relu(tf.nn.bias_add(conv5, b5),name='sigm5')
+        # relu5 = (xrelu5 - tf.reduce_min(xrelu5)) / tf.reduce_max(xrelu5)
 
 
     with tf.variable_scope('conv6') as scope:
         W6 = weight_variable([3, 3, 256, 512])
         b6 = bias_variable([512])
         conv6 = tf.nn.conv2d(relu5, W6, strides=[1, 2, 2, 1], padding='SAME')
-        relu6 = batch_norm(tf.nn.relu(tf.nn.bias_add(conv6, b6),name='sigm6'), phase_train)
+        relu6 = tf.nn.relu(tf.nn.bias_add(conv6, b6),name='sigm6')
+        # relu6 = (xrelu6 - tf.reduce_min(xrelu6)) / tf.reduce_max(xrelu6)
 
     with tf.variable_scope('conv8') as scope:
         W8 = weight_variable([3, 3, 512, 256])
         b8 = bias_variable([256])
         conv8 = tf.nn.conv2d(relu6, W8, strides=[1, 1, 1, 1], padding='SAME')
-        relu8 = batch_norm(tf.nn.relu(tf.nn.bias_add(conv8, b8),name='sigm8'), phase_train)
+        relu8 = tf.nn.relu(tf.nn.bias_add(conv8, b8),name='sigm8')
+        # relu8 = (xrelu8 - tf.reduce_min(xrelu8)) / tf.reduce_max(xrelu8)
 
     with tf.variable_scope('conv7') as scope:
         W7 = weight_variable([3, 3, 256, 128])
         b7= bias_variable([128])
         conv7 = tf.nn.conv2d(relu8, W7, strides=[1, 1, 1, 1], padding='SAME')
-        relu7 = batch_norm(tf.nn.relu(tf.nn.bias_add(conv7, b7),name='sigm7'),phase_train)
+        xrelu7 = tf.nn.relu(tf.nn.bias_add(conv7, b7),name='sigm7')
+        relu7 = (xrelu7 - tf.reduce_min(xrelu7)) / tf.reduce_max(xrelu7)
 
 
 
@@ -185,19 +167,20 @@ def face_net(batch_size,height, width, n_classes,learning_rate,phase_train):
         reshape = tf.reshape(relu7, [-1, dim])
         weights1 =weight_variable([dim, 256])   ##24*24*256*256
         biases1 = bias_variable([256])
-        fc1 = batch_norm(tf.nn.relu(tf.matmul(reshape, weights1) + biases1,name='sigm7'),phase_train)
+        fc1 = tf.nn.relu(tf.matmul(reshape, weights1) + biases1,name='fc1')
+        #fc1 = (xfc1 - tf.reduce_min(xfc1)) / tf.reduce_max(xfc1)
 
     with tf.variable_scope("fc2") as scope:
         weights122 =weight_variable([256, 256])
         biases122 = bias_variable([256])
-        fc2 = batch_norm(tf.nn.relu(tf.matmul(fc1, weights122) + biases122,name='sigm7'), phase_train)
-
+        fc2 = tf.nn.relu(tf.matmul(fc1, weights122) + biases122,name='fc2')
+        #fc2 = (xfc2 - tf.reduce_min(xfc2)) / tf.reduce_max(xfc2)
     with tf.variable_scope("output") as scope:
         weights2 = weight_variable([256, n_classes])
         biases2 = bias_variable([n_classes])
         y_conv=tf.add(tf.matmul(fc2, weights2),biases2,name= 'output')
         rmse = tf.reduce_sum(tf.square(y - y_conv),name = 'loss')
-    print('看看是什么y_conv',y_conv)
+
     with tf.name_scope("optimizer"):
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         global_step = tf.Variable(0, name="global_step", trainable=False)
@@ -214,15 +197,16 @@ def face_net(batch_size,height, width, n_classes,learning_rate,phase_train):
 
 def run_training(txt_name):
     imgs = draw_form(MAX_STEP)
-    logs_train_dir = './face_key/0925_sigm/'
+    read_train_dir =  './face_key/face_kiss/' #'./face_key/0925_sigm/'
+    saver_train_dir =  './face_key/face_kiss/'
     X_data, Y_data = read_img(txt_name)
-    graph= face_net(BATCH_SIZE, IMG_H,IMG_W, N_CLASSES,learning_rate,True)
+    graph= face_net(BATCH_SIZE, IMG_H,IMG_W, N_CLASSES,learning_rate)
     # summary_op = tf.summary.merge_all()
     sess = tf.Session()
     # train_writer = tf.summary.FileWriter(logs_train_dir, sess.graph)
     saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
-    ckpt = tf.train.get_checkpoint_state(logs_train_dir)
+    ckpt = tf.train.get_checkpoint_state(read_train_dir)
     y_step=0
     if ckpt and ckpt.model_checkpoint_path:
         global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
@@ -280,14 +264,18 @@ def run_training(txt_name):
 
         if step % 50 == 0:
             print('Step %d,train loss = %.5f' % (step+y_step, tra_loss))
+
+            print('我是谁我在哪', saver.saver_def.filename_tensor_name)
+
             constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
                                                                        ['output/output'])
-            with tf.gfile.FastGFile(logs_train_dir + 'face72.pb', mode='wb') as f:
+            with tf.gfile.FastGFile(saver_train_dir + 'face72.pb', mode='wb') as f:
                 f.write(constant_graph.SerializeToString())
 
             # 每迭代50次，打印出一次结果
         if step % 200 == 0 or (step + 1) == MAX_STEP:
-            checkpoint_path = os.path.join(logs_train_dir, 'model.ckpt')
+
+            checkpoint_path = os.path.join(saver_train_dir, 'model.ckpt')
             saver.save(sess, checkpoint_path, global_step=step+y_step)
             # 每迭代200次，利用saver.save()保存一次模型文件，以便测试的时候使用
     sess.close()
@@ -298,11 +286,11 @@ txt_name= 'trainc.txt'
 IMG_W = 160
 IMG_H = 160
 
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 MAX_STEP = 80000
 learning_rate = 0.000001
 N_CLASSES = 146
-# run_training(txt_name)
+run_training(txt_name)
 
 
 
@@ -338,8 +326,8 @@ def get_one_image(img_dir):
 #             prediction = sess.run(graph['y_conv'] , feed_dict={graph['x']: np.reshape(image, (1, IMG_W, IMG_H, 3)),graph['y']:np.reshape(op_intp, (1, N_CLASSES))})
 #             return prediction
 
-file_path = '../face68/image_test'
-log_dir = './face_key/0925_sigm/'
+file_path = '../face68/face_kiss'
+log_dir = './face_key/face_kiss/'
 # image_arr=test_file
 with tf.Graph().as_default():
     op_intp = np.zeros(N_CLASSES, np.float32)
@@ -358,11 +346,11 @@ with tf.Graph().as_default():
                 image_arr = get_one_image(img_path)
                 image = (image_arr - 127.5) / 128
                 prediction = sess.run(graph['y_conv'], feed_dict={graph['x']: np.reshape(image, (1, IMG_W, IMG_H, 3)),
-                                                                  graph['y']: np.reshape(op_intp, (1, N_CLASSES))})
+                                                                  graph['y']: np.reshape(op_intp, (1, N_CLASSES)),
+                                                                  graph['phase_train']:True})
                 print('耗时：',datetime.datetime.now()-start_time)
                 img = cv.resize(img, (480, 480), interpolation=cv.INTER_CUBIC)
                 biaoq ='None'
-                prediction[0]= (prediction[0]+1)/2
                 if prediction[0][0]>= 0.4 and prediction[0][0]<0.8:
                     biaoq = 'Smile'
                 elif prediction[0][0]>=0.8:

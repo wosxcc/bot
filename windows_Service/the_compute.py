@@ -11,9 +11,7 @@ def send_request(asocket,cmd):
     try:
         aaa = asocket
         print('命令为：', cmd)
-        print(asocket)
         asocket.sendall(str(cmd).encode("utf-8"))
-        print(asocket)
         data = aaa.recv(200000)
     except socket.error as e:
         print('连接已中断')
@@ -26,6 +24,9 @@ def send_request(asocket,cmd):
 if __name__=="__main__":
     HOST = '127.0.0.1'
     PORT = 8000
+
+
+
     for i in range(16):
         astock = connection_create(HOST, PORT)
         if astock != 0:
@@ -41,7 +42,6 @@ if __name__=="__main__":
             break
         if astock!=0:
             print('已连接服务')
-            print(astock)
             send_request(astock,cmd)
 
         else:

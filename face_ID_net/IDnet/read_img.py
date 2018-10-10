@@ -4,6 +4,27 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.framework import graph_util
+# def get_data_img():
+#     img_path = 'E:/Face_Data/lfwcrop_color/faces'
+#     faceids  ={}
+#     for file in os.listdir(img_path):
+#         if file[:-9] not in faceids:
+#             faceids[file[:-9]]=[]
+#         faceids[file[:-9]].append(file)
+#     face_img = []
+#     face_lab = []
+#     face_class = 0
+#     for name in faceids:
+#         for face_name in faceids[name]:
+#             face_img.append(cv.imread(img_path+'/'+face_name))
+#             face_lab.append(face_class)
+#         face_class+=1
+#     face_img = np.array(face_img,dtype='float32')
+#     face_lab = np.array(face_lab,dtype='int')
+#     return face_img,face_lab
+
+
+
 def get_data_img():
     img_path = 'E:/Face_Data/lfwcrop_color/faces'
     faceids  ={}
@@ -16,16 +37,20 @@ def get_data_img():
     face_class = 0
     for name in faceids:
         for face_name in faceids[name]:
-            face_img.append(cv.imread(img_path+'/'+face_name))
+            face_img.append(img_path+'/'+face_name)
             face_lab.append(face_class)
         face_class+=1
-    face_img = np.array(face_img,dtype='float32')
+    face_img = np.array(face_img,dtype='str')
     face_lab = np.array(face_lab,dtype='int')
     return face_img,face_lab
 
+img,lab = get_data_img()
 
+print('img',img.shape,img[-20:])
 
+print('lab',lab.shape,lab[-20:])
 
+print(lab[-1]+1)
 
 
 
@@ -121,17 +146,13 @@ def face_id_net(Batch_size,img_W,img_H,face_class,learning_rate,is_train=True):
         biases1 = bias_variable([1024])
         fc1 = batch_norm(tf.nn.dropout(tf.nn.relu(tf.matmul(reshape, weights1) + biases1, name="fc1"),0.5),is_train)
 
-    # with tf.variable_scope("fc2") as scope:
-    #     weights122 =weight_variable([1024, 1024])
-    #     biases122 = bias_variable([1024])
-    #     fc2 = tf.nn.dropout(tf.nn.relu(tf.matmul(fc1, weights122) + biases122, name="fc2"),0.5)
-
     with tf.variable_scope("output") as scope:
         weights2 = weight_variable([1024, face_class])
         biases2 = bias_variable([face_class])
         y_conv=tf.add(tf.matmul(fc1, weights2),biases2, name="output")
 
-    
+
+
 
 
 

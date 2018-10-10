@@ -32,7 +32,7 @@ def image_face_id():
             count_name+=1
 
     return img_data
-
+print(image_face_id())
 
 def read_image():
     imgread_date = []

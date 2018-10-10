@@ -14,15 +14,16 @@ def recognize(jpg_path, pb_file_path,img_w,img_h):
             output_graph_def.ParseFromString(f.read())
             print(str(output_graph_def)[:5000])
 
-            print(str(output_graph_def)[5000:])
+            # print(str(output_graph_def)[5000:])
             _ = tf.import_graph_def(output_graph_def, name="")
 
         with tf.Session() as sess:
             init = tf.global_variables_initializer()
             sess.run(init)
             input_x = sess.graph.get_tensor_by_name("input:0")
+            phase_train =sess.graph.get_tensor_by_name("phase_train:0")
             print (input_x)
-            out_softmax = sess.graph.get_tensor_by_name("output/output:0")
+            out_softmax = sess.graph.get_tensor_by_name("InceptionResnetV1/Bottleneck/BatchNorm/Reshape_1:0")
             # out_softmax = sess.graph.get_tensor_by_name("resnet_v2_50/output:0")
             print (out_softmax)
             # out_label = sess.graph.get_tensor_by_name("output:0")
@@ -63,8 +64,8 @@ def recognize(jpg_path, pb_file_path,img_w,img_h):
 
 
 
-
-recognize("E:/xbot/face_into/face68/image_test", "./face72/facell/face72.pb",96,96)  ##../face68/image_test   E:/face72/trainb    E:/xbot/face_into/face68/image_test
+recognize("E:/xbot/face_into/face68/image_test", "../face_key_point/face_key/face_kiss/face72.pb",160,160)
+# recognize("E:/xbot/face_into/face68/image_test", "./face72/facell/face72.pb",96,96)  ##../face68/image_test   E:/face72/trainb    E:/xbot/face_into/face68/image_test
 
 ## E:/xbot/face_into/res_face/facesmoll/log/face72.pb
 

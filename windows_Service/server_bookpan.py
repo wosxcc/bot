@@ -1,5 +1,5 @@
 import socket
-HOST='192.168.0.131'
+HOST='192.168.0.149'
 PORT=8000       #56857
 s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)  #定义socket类型，网络通信，TCP
 s.connect((HOST,PORT)) ## 要连接的IP与端口

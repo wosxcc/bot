@@ -87,33 +87,33 @@ def drow_spot(img,x,y,MAX_STEP):
     cv.waitKey(10)
 
 
-def face_net(batch_size,height, width, n_classes,learning_rate,phase_train):
+def face_net(batch_size,height, width, n_classes,learning_rate):
     print(batch_size,height, width, n_classes,learning_rate)
     x = tf.placeholder(tf.float32, shape=[None, height, width, 3], name='input')
     y = tf.placeholder(tf.float32, shape=[None, n_classes], name='labels')
-
-    def batch_norm(x, phase_train):  # pylint: disable=unused-variable
-        name = 'batch_norm'
-        with tf.variable_scope(name):
-            phase_train = tf.convert_to_tensor(phase_train, dtype=tf.bool)
-            n_out = int(x.get_shape()[-1])
-            beta = tf.Variable(tf.constant(0.0, shape=[n_out], dtype=x.dtype),
-                               name=name + '/beta', trainable=True, dtype=x.dtype)
-            gamma = tf.Variable(tf.constant(1.0, shape=[n_out], dtype=x.dtype),
-                                name=name + '/gamma', trainable=True, dtype=x.dtype)
-
-            batch_mean, batch_var = tf.nn.moments(x, [0], name='moments')
-            ema = tf.train.ExponentialMovingAverage(decay=0.9)
-            def mean_var_with_update():
-                ema_apply_op = ema.apply([batch_mean, batch_var])
-                with tf.control_dependencies([ema_apply_op]):
-                    return tf.identity(batch_mean), tf.identity(batch_var)
-
-            mean, var = control_flow_ops.cond(phase_train,
-                                              mean_var_with_update,
-                                              lambda: (ema.average(batch_mean), ema.average(batch_var)))
-            normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
-        return normed
+    phase_train =tf.placeholder(tf.bool, name='phase_train')
+    # def batch_norm(x, phase_train):  # pylint: disable=unused-variable
+    #     name = 'batch_norm'
+    #     with tf.variable_scope(name):
+    #         phase_train = tf.convert_to_tensor(phase_train, dtype=tf.bool)
+    #         n_out = int(x.get_shape()[-1])
+    #         beta = tf.Variable(tf.constant(0.0, shape=[n_out], dtype=x.dtype),
+    #                            name=name + '/beta', trainable=True, dtype=x.dtype)
+    #         gamma = tf.Variable(tf.constant(1.0, shape=[n_out], dtype=x.dtype),
+    #                             name=name + '/gamma', trainable=True, dtype=x.dtype)
+    #
+    #         batch_mean, batch_var = tf.nn.moments(x, [0], name='moments')
+    #         ema = tf.train.ExponentialMovingAverage(decay=0.9)
+    #         def mean_var_with_update():
+    #             ema_apply_op = ema.apply([batch_mean, batch_var])
+    #             with tf.control_dependencies([ema_apply_op]):
+    #                 return tf.identity(batch_mean), tf.identity(batch_var)
+    #
+    #         mean, var = control_flow_ops.cond(phase_train,
+    #                                           mean_var_with_update,
+    #                                           lambda: (ema.average(batch_mean), ema.average(batch_var)))
+    #         normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
+    #     return normed
 
     def weight_variable(shape,name='weight'):
         initial = tf.truncated_normal_initializer(stddev=0.005,dtype=tf.float32)
@@ -185,19 +185,19 @@ def face_net(batch_size,height, width, n_classes,learning_rate,phase_train):
         reshape = tf.reshape(relu7, [-1, dim])
         weights1 =weight_variable([dim, 256])   ##24*24*256*256
         biases1 = bias_variable([256])
-        fc1 = batch_norm(tf.nn.relu(tf.matmul(reshape, weights1) + biases1,name='sigm7'),phase_train)
+        fc1 = batch_norm(tf.nn.relu(tf.matmul(reshape, weights1) + biases1,name='fc1'),phase_train)
 
     with tf.variable_scope("fc2") as scope:
         weights122 =weight_variable([256, 256])
         biases122 = bias_variable([256])
-        fc2 = batch_norm(tf.nn.relu(tf.matmul(fc1, weights122) + biases122,name='sigm7'), phase_train)
+        fc2 = batch_norm(tf.nn.relu(tf.matmul(fc1, weights122) + biases122,name='fc2'), phase_train)
 
     with tf.variable_scope("output") as scope:
         weights2 = weight_variable([256, n_classes])
         biases2 = bias_variable([n_classes])
         y_conv=tf.add(tf.matmul(fc2, weights2),biases2,name= 'output')
         rmse = tf.reduce_sum(tf.square(y - y_conv),name = 'loss')
-    print('看看是什么y_conv',y_conv)
+
     with tf.name_scope("optimizer"):
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         global_step = tf.Variable(0, name="global_step", trainable=False)
@@ -206,6 +206,7 @@ def face_net(batch_size,height, width, n_classes,learning_rate,phase_train):
     return dict(
         x=x,
         y=y,
+        phase_train=phase_train,
         y_conv=y_conv,
         optimize=train_op,
         cost=rmse,
@@ -214,9 +215,9 @@ def face_net(batch_size,height, width, n_classes,learning_rate,phase_train):
 
 def run_training(txt_name):
     imgs = draw_form(MAX_STEP)
-    logs_train_dir = './face_key/0925_sigm/'
+    logs_train_dir = './face_key/face_kiss/'
     X_data, Y_data = read_img(txt_name)
-    graph= face_net(BATCH_SIZE, IMG_H,IMG_W, N_CLASSES,learning_rate,True)
+    graph= face_net(BATCH_SIZE, IMG_H,IMG_W, N_CLASSES,learning_rate)
     # summary_op = tf.summary.merge_all()
     sess = tf.Session()
     # train_writer = tf.summary.FileWriter(logs_train_dir, sess.graph)
@@ -271,7 +272,8 @@ def run_training(txt_name):
             batch_lab.append(Y_data[xxx])
         _, tra_loss , tra_y_conv ,input_y= sess.run([graph['optimize'],graph['cost'],graph['y_conv'],graph['y']],feed_dict={
                     graph['x']: np.reshape(batch_img, (BATCH_SIZE, IMG_H, IMG_W, 3)),
-                    graph['y']: np.reshape(batch_lab, (BATCH_SIZE, N_CLASSES))})
+                    graph['y']: np.reshape(batch_lab, (BATCH_SIZE, N_CLASSES)),
+                    graph['phase_train']:True})
         print('得到的值',tra_y_conv)
         print('输入的值',input_y)
         loss_list['x'].append(step+y_step)
@@ -302,7 +304,7 @@ BATCH_SIZE = 64
 MAX_STEP = 80000
 learning_rate = 0.000001
 N_CLASSES = 146
-# run_training(txt_name)
+run_training(txt_name)
 
 
 
@@ -338,8 +340,8 @@ def get_one_image(img_dir):
 #             prediction = sess.run(graph['y_conv'] , feed_dict={graph['x']: np.reshape(image, (1, IMG_W, IMG_H, 3)),graph['y']:np.reshape(op_intp, (1, N_CLASSES))})
 #             return prediction
 
-file_path = '../face68/image_test'
-log_dir = './face_key/0925_sigm/'
+file_path = '../face68/face_kiss'
+log_dir = './face_key/face_kiss/'
 # image_arr=test_file
 with tf.Graph().as_default():
     op_intp = np.zeros(N_CLASSES, np.float32)
@@ -358,7 +360,8 @@ with tf.Graph().as_default():
                 image_arr = get_one_image(img_path)
                 image = (image_arr - 127.5) / 128
                 prediction = sess.run(graph['y_conv'], feed_dict={graph['x']: np.reshape(image, (1, IMG_W, IMG_H, 3)),
-                                                                  graph['y']: np.reshape(op_intp, (1, N_CLASSES))})
+                                                                  graph['y']: np.reshape(op_intp, (1, N_CLASSES)),
+                                                                  graph['phase_train']:True})
                 print('耗时：',datetime.datetime.now()-start_time)
                 img = cv.resize(img, (480, 480), interpolation=cv.INTER_CUBIC)
                 biaoq ='None'

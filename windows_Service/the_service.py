@@ -24,15 +24,16 @@ def jonnys(client,addres):
             sdata = str(data, encoding="utf8")
             cmd_status, cmd_result = subprocess.getstatusoutput(sdata)
             if len(cmd_result.strip()) == 0:  # 如果输出结果长度为0，则告诉客户端完成。此用法针对于创建文件或目录，创建成功不会有输出信息
-                # try:
-                client.sendall('Done.')
-                # except socket.error as e:
-                #     print('连接', addres, '已断开')
+                try:
+                    client.sendall('Done.')
+                except socket.error as e:
+                    print('连接', addres, '已断开')
             else:
                 output_txt = cmd_result.encode("utf-8")
-                # try:
-                print(client)
-                client.sendall(output_txt)  # 否则就把结果发给对端（即客户端）
+                try:
+                    client.sendall(output_txt)  # 否则就把结果发给对端（即客户端）
+                except socket.error as e:
+                    print('客户', addres, '连接已断开')
         except socket.timeout:
             print("超时")
 
