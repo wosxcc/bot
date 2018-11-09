@@ -105,8 +105,11 @@ def freeze_graph_def(sess, input_graph_def, output_node_names):
     return output_graph_def
 
 if __name__ == '__main__':
-    model_dir='E:/xbot/face_into/face_key_point/face_key/0930'
-    output_file='E:/xbot/face_into/face_key_point/face_key/0930/botface.pb'
+    # model_dir='E:/xbot/face_into/face_key_point/face_key/0930'
+    # output_file='E:/xbot/face_into/face_key_point/face_key/0930/botface.pb'
+
+    model_dir = 'E:/xbot/face_ID_net/IDnet/botid/1012'
+    output_file = 'E:/xbot/face_ID_net/IDnet/botid/1012/botface.pb'
 
     outpur_dname= ['output/output']
     main(model_dir,output_file,outpur_dname)

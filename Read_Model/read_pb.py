@@ -10,7 +10,7 @@ lfw_batch_size = 1
 def recognize(jpg_path, pb_file_path,img_w,img_h):
     image_batch = tf.placeholder(tf.float32, shape=(None, 160, 160, 3), name='batch_join')
     label_batch = tf.placeholder(tf.int32, shape=(None,), name='batch_join')
-    phase_train_placeholder = tf.placeholder(tf.bool, name='phase_train')
+
 
     input_map = {'image_batch': image_batch, 'label_batch': label_batch, 'phase_train': phase_train_placeholder}
 
@@ -19,7 +19,9 @@ def recognize(jpg_path, pb_file_path,img_w,img_h):
 
         with open(pb_file_path, "rb") as f:
             output_graph_def.ParseFromString(f.read())
-            _ = tf.import_graph_def(output_graph_def,input_map = input_map, name="")
+            # _ = tf.import_graph_def(output_graph_def,input_map = input_map, name="")
+
+            _ = tf.import_graph_def(output_graph_def, name="")
             print(str(output_graph_def)[:5000])
             print()
             print(str(output_graph_def)[-5000:])
@@ -31,6 +33,7 @@ def recognize(jpg_path, pb_file_path,img_w,img_h):
 
             batch_size_placeholder = tf.placeholder(tf.int32, name='batch_size')
             labels = tf.placeholder(tf.int32, shape=(None, 1), name='labels')
+            phase_train_placeholder = tf.placeholder(tf.bool, name='phase_train')
 
             # out_softmax = sess.graph.get_tensor_by_name("embeddings:0")
             out_softmax = tf.get_default_graph().get_tensor_by_name("embeddings:0")

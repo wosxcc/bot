@@ -59,6 +59,7 @@ def face_net(batch_size,height, width, n_classes,learning_rate=0.001,margin=0.3,
     with tf.variable_scope("fc1") as scope:
         dim = int(np.prod(relu7.get_shape()[1:]))
         reshape = tf.reshape(relu7, [-1, dim])
+        print("看啊可能",dim)
         weights1 =weight_variable([dim, 256])   ##24*24*256*256
         biases1 = bias_variable([256])
         fc1 = tf.nn.dropout(tf.nn.relu(tf.matmul(reshape, weights1) + biases1, name="fc1"),0.5)

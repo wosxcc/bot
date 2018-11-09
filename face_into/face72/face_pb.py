@@ -164,7 +164,7 @@ def face_net(batch_size,height, width, n_classes,learning_rate):
         # y_conv = tf.sigmoid(tf.matmul(fc2, weights2)+biases2, name="output")
         # y_conv = tf.sigmoid(tf.matmul(fc2, weights2)+biases2, name="output")
         y_conv=tf.add(tf.matmul(fc2, weights2),biases2, name="output")
-
+    yy_conv =tf.add(y_conv,0,name='xoutput')
     # rmse = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y))
     rmse = tf.sqrt(tf.reduce_mean(tf.square( y - y_conv)))
 
@@ -238,8 +238,8 @@ def run_training(txt_name):
         if step % 50 == 0:
             print('Step %d,train loss = %.5f' % (step+y_step, avg_loss))
             constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
-                                                                       ['output/output'])
-            with tf.gfile.FastGFile(logs_train_dir + 'face72.pb', mode='wb') as f:
+                                                                       ['xoutput'])
+            with tf.gfile.FastGFile(logs_train_dir + 'facex.pb', mode='wb') as f:
                 f.write(constant_graph.SerializeToString())
 
 

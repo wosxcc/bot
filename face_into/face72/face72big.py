@@ -161,6 +161,7 @@ def face_net(images,lab_data,batch_size, n_classes):
                                  initializer=tf.constant_initializer(0.1))
         y_conv = tf.add(tf.matmul(fc1, weights), biases, name="softmax_linear")
         rmse = tf.sqrt(tf.reduce_mean(tf.square(lab_data - y_conv)))
+    tfxx =  tf.add(y_conv,0,name='output')
     return y_conv, rmse
 
 def trainning(loss, learning_rate):
@@ -208,8 +209,8 @@ def run_training(txt_name):
 
             if step % 200 == 0 or (step + 1) == MAX_STEP:
                 constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def,
-                                                                           ['output/output'])
-                with tf.gfile.FastGFile(logs_train_dir + 'face72.pb', mode='wb') as f:
+                                                                           ['output'])
+                with tf.gfile.FastGFile(logs_train_dir + 'facex.pb', mode='wb') as f:
                     f.write(constant_graph.SerializeToString())
 
                 checkpoint_path = os.path.join(logs_train_dir, 'model.ckpt')
@@ -235,7 +236,7 @@ CAPACITY = 32
 MAX_STEP = 10000000
 learning_rate = 0.000001
 N_CLASSES = 146
-# run_training(txt_name)
+run_training(txt_name)
 
 
 

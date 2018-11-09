@@ -23,3 +23,4 @@ for step in range(0,200001):
     sess.run(train)
     if step%2000==0:
         print(step,sess.run(w),sess.run(b))
+

@@ -4,6 +4,7 @@ import numpy as np
 import cv2 as cv
 import datetime
 import os
+import math
 from MY_Function.cv_function import dram_chinese
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
@@ -32,23 +33,17 @@ def recognize(jpg_path, pb_file_path, img_w, img_h):
             print(str(output_graph_def)[:5000])
             print()
             print(str(output_graph_def)[-5000:])
-            image_batch = tf.placeholder(tf.float32, shape=(None, 160, 160, 3), name='batch_join')
-            label_batch = tf.placeholder(tf.int32, shape=(None,), name='batch_join')
-            phase_train_placeholder = tf.placeholder(tf.bool, name='phase_train')
 
-            input_map = {'image_batch': image_batch, 'label_batch': label_batch, 'phase_train': phase_train_placeholder}
-            # print('出错钱')
-
-            _ = tf.import_graph_def(output_graph_def, input_map=input_map, name="") #
+            _ = tf.import_graph_def(output_graph_def, name="") #
             # print('出错猴')
 
         with tf.Session() as sess:
             init = tf.global_variables_initializer()
             sess.run(init)
 
-            batch_size_placeholder = tf.placeholder(tf.int32, name='batch_size')
-            labels = tf.placeholder(tf.int32, shape=(None, 1), name='labels')
-            out_softmax = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
 
             cap = cv.VideoCapture(0)  # 'D:/bot_opencv/opencv_one/opencv_one/image/1.mp4' # 加载摄像头录制
             success, frame = cap.read()
@@ -80,9 +75,9 @@ def recognize(jpg_path, pb_file_path, img_w, img_h):
                             cropped = cv.resize(cropped, (160, 160), interpolation=cv.INTER_CUBIC)
                             cropped = (np.array(cropped, dtype='float32') - 127.5) / 128
                             start_time = datetime.datetime.now()
-                            feed_dict = {image_batch: np.reshape(cropped, [1, img_w, img_h, 3]), labels: np.reshape(1, [1, 1])
-                                ,batch_size_placeholder: lfw_batch_size, phase_train_placeholder: False}
-                            img_out_softmax = sess.run(out_softmax, feed_dict=feed_dict)
+                            feed_dict = {images_placeholder: np.reshape(cropped, [1, img_w, img_h, 3]),
+                                         phase_train_placeholder: False}
+                            img_out_softmax = sess.run(embeddings, feed_dict=feed_dict)
                             print('耗时：', datetime.datetime.now() - start_time)
                             print(img_out_softmax.shape)
                             # img = cv.resize(img, (480, 480), interpolation=cv.INTER_CUBIC)
@@ -90,12 +85,25 @@ def recognize(jpg_path, pb_file_path, img_w, img_h):
                             min_dist = 10.0
 
                             for aface in face_data:
-                                dist = np.sqrt(np.sum(np.square(face_data[aface] - img_out_softmax[0])))
-                                if min_dist > dist:
-                                    min_dist = dist
-                                    min_name = aface
-                            print('最小距离为:', min_dist)
-                            if min_dist < 0.7:
+                                # dist = np.sqrt(np.sum(np.square(face_data[aface] - img_out_softmax[0])))
+                                dot_product = 0.0;
+                                normA = 0.0;
+                                normB = 0.0;
+                                for a, b in zip(face_data[aface], img_out_softmax[0]):
+                                    dot_product += a * b
+                                    normA += a ** 2
+                                    normB += b ** 2
+                                if normA == 0.0 or normB == 0.0:
+                                    print('居然都为0')
+                                else:
+                                    dist=  dot_product / ((normA * normB) ** 0.5)
+                                    dist  = math.acos(dist)
+                                    print('与', min_name, '最小距离为:', min_dist)
+                                    if min_dist > dist:
+                                        min_dist = dist
+                                        min_name = aface
+                            print('得到结果与',min_name,'最小距离为:', min_dist)
+                            if min_dist < 0.9:
                                 frame =dram_chinese(frame,min_name,bb[0],bb[1],30,(255, 0, 0))
                                 # cv.putText(frame, min_name, (bb[0], bb[1]+30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
@@ -104,5 +112,4 @@ def recognize(jpg_path, pb_file_path, img_w, img_h):
                 cv.waitKey(10)
 
 
-recognize("E:/face72/trains", "./model/facenet.pb", 160,
-          160)  ##../face68/image_test   E:/face72/trainb    E:/xbot/face_into/face68/image_test
+recognize("E:/face72/trains", "./model/facenet.pb", 160,160)

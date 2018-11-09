@@ -183,6 +183,7 @@ def face_net(batch_size,height, width, n_classes,learning_rate,phase_train):
 
             dim = int(np.prod(relu7.get_shape()[1:]))
             reshape = tf.reshape(relu7, [-1, dim])
+
             weights1 =weight_variable([dim, 256])   ##24*24*256*256
             biases1 = bias_variable([256])
             fc1 = batch_norm(tf.nn.relu(tf.matmul(reshape, weights1) + biases1,name='sigm7'),phase_train)

@@ -232,7 +232,7 @@ def train_face_net(img_data,lab_data,nclass,image_size,nrof_preprocess_threads,f
                                                 shuffle=True, seed=None, capacity=32)
     index_dequeue_op = index_queue.dequeue_many(batch_size * epoch_num, 'index_dequeue')
     prelogits = face_id_net(image_batch, face_class, phase_train_placeholder)
-    prelogits_center_loss,_ = center_loss(prelogits, label_batch, alfa, nclass)
+    prelogits_center_loss, _ = center_loss(prelogits, label_batch, alfa, nclass)
 
     logits = slim.fully_connected(prelogits, nclass, activation_fn=None,
                                   weights_initializer=slim.initializers.xavier_initializer(),
@@ -242,7 +242,7 @@ def train_face_net(img_data,lab_data,nclass,image_size,nrof_preprocess_threads,f
     prelogits_norm = tf.reduce_mean(tf.norm(tf.abs(prelogits) + eps, ord=1, axis=1))
     tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, prelogits_norm * 0.0005)
 
-    tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, prelogits_center_loss * 0.0)
+    tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, prelogits_center_loss * 0.00)
 
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
         labels=label_batch, logits=logits, name='cross_entropy_per_example')
@@ -254,13 +254,12 @@ def train_face_net(img_data,lab_data,nclass,image_size,nrof_preprocess_threads,f
 
     # Calculate the total losses
     regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-    total_loss = tf.add_n([cross_entropy_mean] + regularization_losses, name='total_loss')
+    print('看看你的真面目',[cross_entropy_mean] ,regularization_losses,prelogits_center_loss)
+    total_loss = tf.add_n([cross_entropy_mean] + regularization_losses+[prelogits_center_loss], name='total_loss')
 
     train_op = trian_optimizer(total_loss,learning_rate=learning_rate)
 
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.7)
-
-
 
     sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
 
@@ -342,5 +341,5 @@ epoch_num = 1000
 face_class = 512
 alfa = 0.95
 max_epoch = 200
-learning_rate=0.0001
+learning_rate=0.000001
 train_face_net(img_data,lab_data,nclass,image_size,nrof_preprocess_threads,face_class,alfa,max_epoch,batch_size,epoch_num,learning_rate)

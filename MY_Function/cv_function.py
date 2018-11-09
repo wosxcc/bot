@@ -78,7 +78,53 @@ def img_conv(img, kernel,stride,padding = 0):
 
 
 
+# 画坐标
+def draw_form(MAX_STEP):
+    step = MAX_STEP / 10
+    img_H = 1000
+    img_W = 1200
+    coordinate = np.zeros((img_H, img_W, 3), np.uint8)
+    coordinate[:, :, :] = 255
+    line_c = 8
+    coordinate = cv.line(coordinate, (100, img_H - 100), (img_W, img_H - 100), (0, 0, 0), 2)
+    coordinate = cv.line(coordinate, (100, 0), (100, img_H - 100), (0, 0, 0), 2)
 
+    for i in range(11):
+        coordinate = cv.line(coordinate, (i * 100 + 100, img_H - 100), (i * 100 + 100, 0), (0, 0, 0), 1)
+        coordinate = cv.line(coordinate, (100, i * 100 + 100), (img_W, i * 100 + 100), (0, 0, 0), 1)
+        if i > 0:
+            cv.putText(coordinate, str(i * step), (i * 100 + 100 - 32, img_H - 100 + 50), cv.FONT_HERSHEY_SIMPLEX, 0.6,
+                       (0, 0, 0), 2)
+        biaohao = '%.1f' % (1.0 - i * 0.1 - 0.2)
+        if biaohao == '-0.0':
+            cv.putText(coordinate, '0', (100 - 50, i * 100 + 100 + 10 + 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
+        else:
+            cv.putText(coordinate, biaohao, (100 - 50, i * 100 + 100 + 10), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
+
+    return coordinate
+
+
+
+
+
+# 画点
+def drow_spot(img,x,y,MAX_STEP):
+
+    ss= '%.5f'%(y)
+    if len(ss)>=7:
+        ss = ss[0:7]
+    else:
+        for i in range(7-len(ss)):
+            ss+= '0'
+    put_str='step:%d  loss:'%(x)+ss
+    img[120:180,500:920,:]=255
+    cv.putText(img, put_str,(500,150), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+    spot_x = max(min(int(x/MAX_STEP*1000+100),1000),0)
+    spot_y = max(min(int(900-y*1000),1000),0)
+    # print('画点位置：',spot_x,spot_y)
+    cv.circle(img,(spot_x,spot_y),3,(0,0,255),-1)
+    cv.imshow('LOSS',img)
+    cv.waitKey(10)
 
 
 
