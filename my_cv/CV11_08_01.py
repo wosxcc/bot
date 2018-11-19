@@ -1,8 +1,8 @@
 import cv2 as cv
 import numpy as np
 yimg1 = cv.imread('./Desk/184.jpg')
-imgs_res =cv.resize(yimg1,(600,600),cv.INTER_CUBIC)
-img1 =cv.cvtColor(imgs_res,cv.COLOR_BGR2GRAY)
+imgs_res1 =cv.resize(yimg1,(600,600),cv.INTER_CUBIC)
+img1 =cv.cvtColor(imgs_res1,cv.COLOR_BGR2GRAY)
 
 yimg2 = cv.imread('./Desk/170.jpg')
 
@@ -45,7 +45,7 @@ for alist in contours:
         cv.rectangle(img_res, (min_X, min_Y), (max_X, max_Y), (255, 255, 0), 2)
 
 cv.drawContours(img_res,contours,-1,(255,0,255),2)
-
+cv.imshow('img_res1',imgs_res1)
 cv.imshow('img_res',img_res)
 cv.imshow('xorimg2',xorimg2)
 cv.imshow('img_jian',img_jian)

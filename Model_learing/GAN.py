@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 import  os
 import  cv2 as cv
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Training Params
 num_steps = 100000
@@ -18,7 +18,7 @@ image_dim = 27648 # 28*28 pixels * 1 channel
 gen_hidden_dim = 256
 disc_hidden_dim = 256
 noise_dim = 200 # Noise data points
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 
 
 def get_batch(image, img_W, img_H, batch_size, capacity):
@@ -35,7 +35,6 @@ path_file = 'E:/xbot/my_tf/gangan'
 img_name=[]
 for filess in  os.listdir(path_file):
     img_name.append(path_file+'/'+filess)
-print(img_name)
 num_batch = len(img_name)//batch_size
 
 def get_nextbatch(index):

@@ -3,13 +3,13 @@ import collections
 import tensorflow as tf
 import time
 import math
-import os
 import numpy as np
 import cv2 as cv
 import datetime
 from datetime import datetime
 from tensorflow.python.framework import graph_util
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 slim = tf.contrib.slim
 
@@ -56,6 +56,8 @@ def read_img(txt_name):
 
 
 def subsample(inputs, factor, scope = None):
+
+    # 判断步长看看是否需要池化
     if factor == 1:
         return inputs
     else:
@@ -98,7 +100,7 @@ def stack_blocks_dense(net, blocks, outputs_collections = None):
                     net = block.unit_fn(net, depth = unit_depth,depth_bottleneck=unit_depth_bottleneck,stride = unit_stride)
 
                     print('看看什么是',net)
-                    net = slim.utils.collect_named_outputs(outputs_collections, sc.name, net)
+                    net = slim.utils.collect_named_outputs(outputs_collections, sc.name, net) # 将变量取个别名，并收集到collection中
                     print('看完后是什么', net)
     print('返回的值',net)
     return net
@@ -108,23 +110,23 @@ def stack_blocks_dense(net, blocks, outputs_collections = None):
 # 定义残差网络
 @slim.add_arg_scope
 def bottleneck(inputs, depth, depth_bottleneck, stride, outputs_collections = None, scope = None):
-
+#                      抽取特征数量   残差单元      步长
     with tf.variable_scope(scope, 'bottleneck_v2', [inputs]) as sc:
-        depth_in = slim.utils.last_dimension(inputs.get_shape(), min_rank = 4)
-        preact = slim.batch_norm(inputs, activation_fn = tf.nn.relu, scope = 'preact')
+        depth_in = slim.utils.last_dimension(inputs.get_shape(), min_rank = 4)  # 获取传入的特征数量
 
+        preact = slim.batch_norm(inputs, activation_fn = tf.nn.relu, scope = 'preact')  # 对数据进行归一化
+
+        # 如果是指定的大小的话就认为是捷径层 ，不是的话转为固定大小
         if depth == depth_in:
-            shortcut = subsample(inputs, stride, 'shortcut')
+            shortcut = subsample(inputs, stride, 'shortcut')   # 根据步长判断是否需要池化
         else:
             shortcut = slim.conv2d(preact, depth, [1, 1], stride = stride, normalizer_fn = None, activation_fn = None, scope = 'shortcut')
 
-        residual = slim.conv2d(preact, depth_bottleneck, [1, 1], stride = 1, scope = 'conv1')
-        residual = conv2d_same(residual, depth_bottleneck, 3, stride, scope = 'conv2')
-        print('挖断上帝', residual)
-        residual = slim.conv2d(residual, depth, [1, 1], stride = 1, normalizer_fn = None, activation_fn = None, scope = 'conv3')
+        residual = slim.conv2d(preact, depth_bottleneck, [1, 1], stride = 1, scope = 'conv1')   # 用1*1的卷积核对图像特征数进行改变  压缩过程
+        residual = conv2d_same(residual, depth_bottleneck, 3, stride, scope = 'conv2')          #   卷积过程
+        residual = slim.conv2d(residual, depth, [1, 1], stride = 1, normalizer_fn = None, activation_fn = None, scope = 'conv3')  # 扩张过程
 
-        output = shortcut + residual
-
+        output = shortcut + residual        # 前后层特征融合过程(只把值相加)
         return slim.utils.collect_named_outputs(outputs_collections, sc.name, output)
 
 

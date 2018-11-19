@@ -3,7 +3,7 @@ from keras.models import Model
 from keras import backend as K
 import tensorflow as tf
 
-def l2_regularizer(weight_decay=0.0005, scope=None):
+def l2_regularizer(weight_decay=0.0005, scope=None):   # L2正则化
         def regularizer(tensor):
             with tf.name_scope(scope, default_name='l2_regularizer', values=[tensor]):
                 l2_weight = tf.convert_to_tensor(weight_decay,
@@ -13,7 +13,7 @@ def l2_regularizer(weight_decay=0.0005, scope=None):
         return regularizer
 
 
-def Scale(axis, c_in, name):
+def Scale(axis, c_in, name):  # 尺寸
     with tf.variable_scope(name) as scope:
         alpha = tf.get_variable('alpha', shape=[c_in, ], dtype=tf.float32,
                                 initializer=tf.constant_initializer(1.0), trainable=True,

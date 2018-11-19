@@ -157,9 +157,7 @@ def resnet_v2(inputs, blocks, BATCH_SIZE, num_classes = None, global_pool = True
             net = tf.reshape(net, shape=[1, num_classes],name = 'output')
             return net, end_points
 
-
-
-def resnet_v2_50(inputs,BATCH_SIZE, num_classes = None, global_pool = True, reuse = None, scope = 'resnet_v2_50'):
+def resnet_v2_50(inputs, BATCH_SIZE, num_classes=None, global_pool=True, reuse=None, scope='resnet_v2_50'):
     # print(num_classes, global_pool, reuse)
     blocks = [
         Block('block1', bottleneck, [(128, 32, 1)] * 2 + [(128, 32, 2)]),
