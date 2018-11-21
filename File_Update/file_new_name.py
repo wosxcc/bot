@@ -1,9 +1,9 @@
 import os
 
-path = 'E:/2018-09-12'
+path = 'E:/Desk_Set/train1121'
 
-path = '../crete_data/yy22/'
-count=620
+# path = '../crete_data/yy22/'
+count=88666
 for file in os.listdir(path):
     print(file)
     print('E:/fujian/'+str(count)+'.jpg')

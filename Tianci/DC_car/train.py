@@ -4,7 +4,7 @@ import csv
 from math import *
 import random
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 flie_path = "my_train.csv"
 cvs_read = csv.reader(open(flie_path))
 xdata = np.zeros((500000,5816+12+31+24+60+2),dtype=np.float32)

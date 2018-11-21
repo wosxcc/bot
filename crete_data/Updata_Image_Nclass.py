@@ -14,8 +14,8 @@ nclass =['显示器', '键盘', '鼠标', '笔记本电脑', '电话', '打印�
 IMG_W = 800
 IMG_H = 800
 now_class = 0
-windows_name='./ccccc/'   # 文件位置E:\Desk_Set
-path='./yy22/'                                     # 文件保存位置
+windows_name='E:/Desk_Set/train1121/'   # 文件位置E:\Desk_Set
+path='E:/Desk_Set/train1121/'                                     # 文件保存位置
 img_copy=[]
 sum_init=[]
 

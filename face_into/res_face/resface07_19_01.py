@@ -202,7 +202,6 @@ def train_net():
         if step %200 == 0 or (step + 1) ==MAX_STEP:
             checkpoint_path = os.path.join(logs_train_dir,'model.ckpt')
             saver.save(sess,checkpoint_path,global_step=step+y_step)
-
     sess.close()
 
 
