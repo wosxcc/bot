@@ -108,8 +108,8 @@ if __name__ == '__main__':
     # model_dir='E:/xbot/face_into/face_key_point/face_key/0930'
     # output_file='E:/xbot/face_into/face_key_point/face_key/0930/botface.pb'
 
-    model_dir = 'E:/xbot/face_ID_net/IDnet/botid/1012'
-    output_file = 'E:/xbot/face_ID_net/IDnet/botid/1012/botface.pb'
+    model_dir = 'E:/xbot/face_about/face_point/1204'
+    output_file = 'E:/xbot/face_about/face_point/1204/botface.pb'
 
-    outpur_dname= ['output/output']
+    outpur_dname= ['botface/output/output']
     main(model_dir,output_file,outpur_dname)
