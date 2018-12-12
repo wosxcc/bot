@@ -4,10 +4,10 @@ import numpy as np
 import tensorflow as tf
 import datetime
 import random
-from face_about.read_data import rdata
+from face_about.read_data import *
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.framework import graph_util
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
 # 画坐标
@@ -231,8 +231,7 @@ def run_training():
     lr = tf.Variable(0.5, trainable=False)
     lrx = tf.constant(0.85, dtype=tf.float32, name="lrx")
 
-
-    X_data, Y_data = rdata()
+    X_data_flie = open('train_file.txt').read().split('\n')
     phase_train = tf.placeholder(tf.bool, name='phase_train')
 
     # x = tf.placeholder(tf.float32, shape=[None, IMG_W, IMG_H, 3], name='input')
@@ -259,22 +258,21 @@ def run_training():
     for step in np.arange(MAX_STEP):
         if step%500==0:
             lr = lrx * lr
-            X_data, Y_data = rdata()
         print(sess.run(lr))
+
         batch_img = []
         batch_lab = []
         for ai in range(BATCH_SIZE):
-            xxx = random.randint(0,X_data.shape[0]-1)
-            batch_img.append(X_data[xxx])
-            batch_lab.append(Y_data[xxx])
+            xxx = random.randint(0, len(X_data_flie) - 1)
+            batch_img.append(X_data_flie[xxx].split('---')[0])
+            batch_lab.append(X_data_flie[xxx].split('---')[1])
+        batch_x, batch_y = file_to_data(batch_img, batch_lab)
         _, tra_loss , tra_y_conv ,input_y= sess.run([graph['optimize'],graph['loss'],graph['y_conv'],graph['y']],feed_dict={
-                    graph['x']: np.reshape(batch_img, (BATCH_SIZE, IMG_H, IMG_W, 3)),
-                    graph['y']: np.reshape(batch_lab, (BATCH_SIZE, n_classes+n_nature)),
+                    graph['x']: np.reshape(batch_x, (BATCH_SIZE, IMG_H, IMG_W, 3)),
+                    graph['y']: np.reshape(batch_y, (BATCH_SIZE, n_classes+n_nature)),
                     phase_train:True,lr:0.05})
         print('开始你的表演')
-        print(sess.run(tf.slice(tf.convert_to_tensor(np.reshape(batch_lab, (BATCH_SIZE, n_classes+n_nature))), [0, 3], [BATCH_SIZE, 3])))
-        print(sess.run(tf.slice(tf.convert_to_tensor(np.reshape(batch_lab, (BATCH_SIZE, n_classes+n_nature))), [0, 6], [BATCH_SIZE, 3])))
-        print(sess.run(tf.slice(tf.convert_to_tensor(np.reshape(batch_lab, (BATCH_SIZE, n_classes+n_nature))), [0, 0], [BATCH_SIZE, 3])))
+
         print('得到的值',tra_y_conv[:,0:9])
         print('输入的值',input_y[:,0:9])
         loss_list['x'].append(step+y_step)
