@@ -14,34 +14,36 @@ def conv3x3(in_planes, out_planes, stride=1):
 class BasicBlock(nn.Module):
     expansion = 1
 
+#                     原有通道数，卷积核数量，步长
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
-        self.conv1 = conv3x3(inplanes, planes, stride)
+
+        self.conv1 = conv3x3(inplanes, planes, stride)  # 通道上层变本层的卷积
         self.bn1 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = conv3x3(planes, planes)
+        self.conv2 = conv3x3(planes, planes)            # 通道数不变的卷积
         self.bn2 = nn.BatchNorm2d(planes)
         self.downsample = downsample
         self.stride = stride
 
         if planes == 64:
-            self.globalAvgPool = nn.AvgPool2d(56, stride=1)
+            self.globalAvgPool = nn.AvgPool2d(56, stride=1)     # Squeeze 操作 用一个均值的pool来获取图像一个通道的平均值   （这里的图像大小必须为56*56）  将每个二维的特征通道变成一个实数
         elif planes == 128:
             self.globalAvgPool = nn.AvgPool2d(28, stride=1)
         elif planes == 256:
             self.globalAvgPool = nn.AvgPool2d(14, stride=1)
         elif planes == 512:
             self.globalAvgPool = nn.AvgPool2d(7, stride=1)
-        self.fc1 = nn.Linear(in_features=planes, out_features=round(planes / 16))
+        self.fc1 = nn.Linear(in_features=planes, out_features=round(planes / 16))       #
         self.fc2 = nn.Linear(in_features=round(planes / 16), out_features=planes)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         residual = x
 
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
+        out = self.conv1(x)         # 对图片进行卷积，进行缩放
+        out = self.bn1(out)         # 归一化操作
+        out = self.relu(out)        # 激活函数
 
         out = self.conv2(out)
         out = self.bn2(out)
@@ -50,14 +52,15 @@ class BasicBlock(nn.Module):
             residual = self.downsample(x)
 
         original_out = out
-        out = self.globalAvgPool(out)
-        out = out.view(out.size(0), -1)
-        out = self.fc1(out)
+        out = self.globalAvgPool(out)       # Sqeeze操作
+        out = out.view(out.size(0), -1)     # 转化为一维
+        out = self.fc1(out)                 # 对特征数量进行缩放
+        # print(out)
         out = self.relu(out)
-        out = self.fc2(out)
-        out = self.sigmoid(out)
-        out = out.view(out.size(0), out.size(1), 1, 1)
-        out = out * original_out
+        out = self.fc2(out)                 # 对特征数量进行扩张
+        out = self.sigmoid(out)             # 非线性激活
+        out = out.view(out.size(0), out.size(1), 1, 1)      # Excitation 操作  通过参数 w 来为每个特征通道生成权重
+        out = out * original_out                            # Reweight 的操作 然后通过乘法逐通道加权到先前的特征上，完成在通道维度上的对原始特征的重标定。
 
         out += residual
         out = self.relu(out)
@@ -79,7 +82,7 @@ class Bottleneck(nn.Module):
         self.bn3 = nn.BatchNorm2d(planes * 4)
         self.relu = nn.ReLU(inplace=True)
         if planes == 64:
-            self.globalAvgPool = nn.AvgPool2d(56, stride=1)
+            self.globalAvgPool = nn.AvgPool2d(56, stride=1)     # Squeeze将每个二维的特征通道变成一个实数 操作 用一个均值的pool来获取图像一个通道的平均值   （这里的图像大小必须为56*56）
         elif planes == 128:
             self.globalAvgPool = nn.AvgPool2d(28, stride=1)
         elif planes == 256:
@@ -139,8 +142,8 @@ class SENet(nn.Module):
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
-        self.avgpool = nn.AvgPool2d(7, stride=1)
-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+        self.avgpool = nn.AvgPool2d(7, stride=1)                                # 将每512个二维的特征通道变成一个实数 得到长为512数据
+        self.fc = nn.Linear(512 * block.expansion, num_classes)                 # 转化为分类数量
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -162,7 +165,7 @@ class SENet(nn.Module):
         layers = []
         layers.append(block(self.inplanes, planes, stride, downsample))
         self.inplanes = planes * block.expansion
-        for i in range(1, blocks):
+        for i in range(1, blocks):                          # 相同网络进行循环
             layers.append(block(self.inplanes, planes))
 
         return nn.Sequential(*layers)
@@ -171,17 +174,17 @@ class SENet(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
-        x = self.maxpool(x)
-
+        # x = self.maxpool(x)
+        # print('目前x的大小',x.data.cpu().numpy().shape) # (4, , 56 ,56)
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-
+        # print('目前x的大小', x.data.cpu().numpy().shape) # (4, , 7 ,7)
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
-
+        # print('目前x的大小', x.data.cpu().numpy().shape)  # (4,2)
         return x
 
 

@@ -33,8 +33,9 @@ class Net(nn.Module):
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
-net = Net().cuda()
-
+net = Net()
+net.load_state_dict(torch.load('params.pkl'))
+net = net.cuda()
 #
 # data_transform = transforms.Compose(
 #     [transforms.Resize(96),
@@ -53,8 +54,6 @@ for imfile in os.listdir(path_img):
     img =cv.imread(path_img+'/'+imfile)
     img =cv.resize(img,(96,96),cv.INTER_CUBIC)
 
-
-    net.load_state_dict(torch.load('params.pkl'))
     img_ = (np.array(img[:, :, ::-1].transpose((2, 0, 1)),dtype=np.float32)-127.5)/128
     # print(img_.shape)
     # print(np.resize(img_,[1,3,96,96]).shape)

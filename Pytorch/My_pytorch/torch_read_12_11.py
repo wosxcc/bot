@@ -29,9 +29,17 @@ for imfile in os.listdir(path_img):
 
     img =cv.imread(path_img+'/'+imfile)
     img =cv.resize(img,(96,96),cv.INTER_CUBIC)
-    img_ = (np.array(img[:, :, ::-1].transpose((2, 0, 1)), dtype=np.float32) - 127.5) / 128.0
+    img_ = (np.array(img[:, :, ::-1].transpose((2, 0, 1)), dtype=np.float32) - 127.5) / 128. #
+    img_tensor = Variable(torch.from_numpy(np.resize(img_, [1, 3, 96, 96]))).float()
+    # #
+
+    # img_ = np.array(img[:, :, ::-1].transpose((2, 0, 1)), dtype=np.float32)/ 255.0
+    # img_ =np.resize(img_, [1, 3, 96, 96])
+    # img_ = torch.from_numpy(img_).float()
+    # img_tensor = Variable(img_)
+
     # before =datetime.datetime.now()
-    img_tensor = Variable(torch.from_numpy(np.resize(img_, [1, 3, 96, 96])))
+
     # print('数据转换耗时',before,'\t',datetime.datetime.now(),'\t',datetime.datetime.now()-before)
 
 

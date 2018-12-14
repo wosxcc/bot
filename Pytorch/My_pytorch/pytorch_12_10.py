@@ -69,9 +69,11 @@ if __name__ == '__main__':
         for i,data in enumerate(train_loader,0):
             # print(i,data)
             inputs ,labels = data
+            print('看看',labels)
             inputs ,labels = Variable(inputs),Variable(labels)
             optimizer.zero_grad()
             outputs = net(inputs)
+            print(labels)
             loss  = cirterion(outputs,labels)
             loss.backward()
             optimizer.step()
